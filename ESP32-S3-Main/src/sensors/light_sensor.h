@@ -22,9 +22,8 @@ public:
     void begin();
     void update();
     int getLightLevel(LDRPosition pos);
-    bool isPathVisible();
-    bool isCompartmentOpen();
-    bool isBrightEnough();
+    int getPathDarkness();           // returns 0-255 darkness for LEDs
+    bool isCompartmentOpen();        // true if compartment open
 };
 
 #endif

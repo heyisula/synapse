@@ -4,7 +4,7 @@
 
 // System Constants
 #define SERIAL_BAUD_RATE 115200
-#define UART_BAUD_RATE 9600
+#define UART_BAUD_RATE 115200
 #define I2C_FREQUENCY 100000
 
 // Ultrasonic Constants

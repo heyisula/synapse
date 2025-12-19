@@ -1,11 +1,11 @@
 #ifndef PINS_H
 #define PINS_H
 
-// I2C Bus Pins (Shared by LCD, MPU6050, MAX30102, AM2320)
+//I2C Bus
 #define I2C_SDA 2
 #define I2C_SCL 3
 
-// Ultrasonic Sensors (HC-SR04)
+// Ultrasonic Sensors
 #define ULTRASONIC_FRONT_TRIG 4
 #define ULTRASONIC_FRONT_ECHO 5
 #define ULTRASONIC_BACK_TRIG 6
@@ -21,11 +21,11 @@
 #define LDR_COMPARTMENT_1 17
 #define LDR_COMPARTMENT_2 18
 
-// Piezo Buzzers
+// Buzzers
 #define BUZZER_1 12
 #define BUZZER_2 13
 
-// UART Communication (to ESP32-WROOM)
+// UART Communication
 #define UART_TX 43
 #define UART_RX 44
 
@@ -37,22 +37,22 @@
 #define LINE_SENSOR_S5 21  // Far Right
 
 // LED Arrays
-#define LED_ARRAY_RIGHT 42
-#define LED_ARRAY_LEFT 41
+#define LED_RIGHT 42
+#define LED_LEFT 41
 
-// KY-040 Rotary Encoder
+// Rotary Encoder
 #define ROTARY_SW 40
 #define ROTARY_DT 39
 #define ROTARY_CLK 38
 
-// TCS3200 Color Sensor
+// Color Sensor
 #define COLOR_OUT 0
 #define COLOR_S0 47
 #define COLOR_S1 48
 #define COLOR_S2 20
 #define COLOR_S3 45
 
-// AM2320 Temperature/Humidity Sensor
-#define AM2320_DATA 19
+// Temperature/Humidity Sensor
+#define AM2302_DATA 19
 
 #endif

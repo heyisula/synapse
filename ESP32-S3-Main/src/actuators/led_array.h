@@ -14,18 +14,30 @@ class LEDArray {
 private:
     uint8_t leftPin;
     uint8_t rightPin;
+
     LEDPattern leftPattern;
     LEDPattern rightPattern;
+
+    uint8_t leftBrightness;
+    uint8_t rightBrightness;
+    bool brightnessMode;   // TRUE = PWM mode
+
     unsigned long lastUpdateTime;
     bool ledState;
     
 public:
     LEDArray();
     void begin();
+
+    void setBrightness(uint8_t left, uint8_t right); // 0-255 PWM
+    void setBothBrightness(uint8_t brightness);               // convenience
+
     void update();
     void setPattern(bool isLeft, LEDPattern pattern);
     void setBoth(LEDPattern pattern);
     void setStatus(bool left, bool right);
+
+
 };
 
 #endif

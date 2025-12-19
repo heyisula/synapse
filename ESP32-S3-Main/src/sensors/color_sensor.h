@@ -8,6 +8,7 @@ enum ColorType {
     COLOR_BLUE,
     COLOR_RED,
     COLOR_BLACK,
+    COLOR_GREEN,
     COLOR_UNKNOWN
 };
 
@@ -22,7 +23,7 @@ private:
     uint8_t s0Pin, s1Pin, s2Pin, s3Pin, outPin;
     RGBColor currentColor;
     unsigned long lastReadTime;
-    
+    int ambientClear;
     int readColor(bool r, bool g, bool b);
     
 public:
@@ -34,6 +35,14 @@ public:
     ColorType getColorType();
     bool isWhiteCoat();
     bool isBlueScrubs();
+
+    bool isRed();
+    bool isGreen();
+    bool isBlack();
+    bool isUnknown();
+    bool isBlueDominant();
+    bool isWhiteDominant();
+    bool isPureWhite();
 };
 
 #endif

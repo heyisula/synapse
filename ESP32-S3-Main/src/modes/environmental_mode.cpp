@@ -22,7 +22,7 @@ void EnvironmentalMode::update() {
 void EnvironmentalMode::checkConditions() {
     float temp = envSensor->getTemperature();
     float humidity = envSensor->getHumidity();
-    bool lightOK = lightSensor->isPathVisible();
+    bool lightOK = lightSensor->getPathDarkness() < PATH_LIGHT_THRESHOLD;
     
     if(temp < TEMP_MIN || temp > TEMP_MAX) {
         state = ENV_WARNING;

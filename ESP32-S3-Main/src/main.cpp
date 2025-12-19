@@ -2,6 +2,7 @@
 #include <Wire.h>
 #include "config/pins.h"
 #include "config/constants.h"
+#include "config/thresholds.h"
 
 // Sensors
 #include "sensors/ultrasonic.h"
@@ -57,7 +58,7 @@ LineFollower lineFollower;
 ColorSensor colorSensor;
 MotionTracker motionTracker;
 HeartRateSensor heartRateSensor;
-Environmental environmental;
+Environmental environmental(AM2302_DATA);
 LightSensor lightSensor;
 
 // Actuators
@@ -72,7 +73,6 @@ MenuSystem menuSystem(&display, &buzzer);
 // Communication
 UARTProtocol uartProtocol;
 WiFiManager wifiManager;           // ✓ NOW INITIALIZED
- 
 
 // Navigation
 PathPlanner pathPlanner;           // ✓ NOW INITIALIZED
@@ -536,8 +536,8 @@ void loop() {
     // ========================================================================
     if (currentTime - lastLightCheck >= 1000) {  // Check every second
         // Check path visibility
-        if (!lightSensor.isPathVisible()) {
-            Serial.println("⚠️  Warning: Low light on path");
+        if (lightSensor.getPathDarkness() >= PATH_LIGHT_THRESHOLD) {
+            Serial.println("Warning: Low light on path");
             buzzer.singleBeep();
             dataLogger.logEvent("LIGHT", "Low path visibility");
             
@@ -545,10 +545,11 @@ void loop() {
                 wifiManager.sendAlert("Low light conditions", 2);
             }
         }
-        
+        static bool compartmentWasOpen = false;
+        bool compartmentIsOpen = lightSensor.isCompartmentOpen();
         // Check compartment security
-        if (lightSensor.isCompartmentOpen()) {
-            Serial.println("⚠️  Compartment opened");
+        if (compartmentIsOpen && !compartmentWasOpen) {
+            Serial.println("Compartment opened");
             dataLogger.logEvent("SECURITY", "Compartment accessed");
         }
         

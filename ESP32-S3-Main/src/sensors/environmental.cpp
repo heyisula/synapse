@@ -1,37 +1,42 @@
-// ============================================================================
-// FILE: ESP32-S3-Main/src/sensors/environmental.cpp
-// ============================================================================
 #include "environmental.h"
+#include "../config/pins.h"
 #include "../config/thresholds.h"
 #include "../config/constants.h"
 
-Environmental::Environmental()
-    : dht(DHTPIN, DHTTYPE)
-{
-    temperature = 0.0;
-    humidity = 0.0;
-    lastReadTime = 0;
-}
+#define AM2303_READ_INTERVAL 2000UL
+
+Environmental::Environmental(uint8_t pin)
+    : sensor(pin),
+      temperature(NAN),
+      humidity(NAN),
+      lastReadTime(0)
+{ }
 
 bool Environmental::begin() {
-    dht.begin();
+    sensor.begin();
     delay(1000);
     return true;
 }
 
 void Environmental::update() {
-    unsigned long currentTime = millis();
-    if (currentTime - lastReadTime >= 2000) { // 2s interval for stable readings
-        float t = dht.readTemperature();
-        float h = dht.readHumidity();
+    unsigned long now = millis();
+    if (now - lastReadTime < AM2303_READ_INTERVAL) {
+        return;
+    }
+    lastReadTime = now;
 
-        // Only update if valid readings are received
-        if (!isnan(t) && !isnan(h)) {
-            temperature = t;
-            humidity = h;
-        }
+    // Read sensor
+    int status = sensor.read();
 
-        lastReadTime = currentTime;
+    if (status == 0) {
+        temperature = sensor.get_Temperature();
+        humidity    = sensor.get_Humidity();
+    } else {
+        // Optionally log errors; reset readings on failure
+        Serial.print("AM2302 read failed: ");
+        Serial.println(AM2302::AM2302_Sensor::get_sensorState(status));
+        temperature = NAN;
+        humidity    = NAN;
     }
 }
 
@@ -44,17 +49,21 @@ float Environmental::getHumidity() {
 }
 
 bool Environmental::isOptimalTemperature() {
-    return temperature >= TEMP_MIN && temperature <= TEMP_MAX;
+    return !isnan(temperature) &&
+           temperature >= TEMP_MIN &&
+           temperature <= TEMP_MAX;
 }
 
 bool Environmental::isOptimalHumidity() {
-    return humidity >= HUMIDITY_MIN && humidity <= HUMIDITY_MAX;
+    return !isnan(humidity) &&
+           humidity >= HUMIDITY_MIN &&
+           humidity <= HUMIDITY_MAX;
 }
 
 bool Environmental::isHighTemperature() {
-    return temperature > TEMP_MAX;
+    return !isnan(temperature) && temperature > TEMP_MAX;
 }
 
 bool Environmental::isLowTemperature() {
-    return temperature < TEMP_MIN;
+    return !isnan(temperature) && temperature < TEMP_MIN;
 }

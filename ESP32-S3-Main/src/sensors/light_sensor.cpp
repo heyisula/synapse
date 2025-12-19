@@ -3,6 +3,8 @@
 #include "../config/constants.h"
 #include "../config/thresholds.h"
 
+#define SENSOR_READ_INTERVAL 100
+
 LightSensor::LightSensor() {
     ldrPins[LDR_PATH_L] = LDR_PATH_LEFT;
     ldrPins[LDR_PATH_R] = LDR_PATH_RIGHT;
@@ -35,19 +37,13 @@ int LightSensor::getLightLevel(LDRPosition pos) {
     return lightLevels[pos];
 }
 
-bool LightSensor::isPathVisible() {
+int LightSensor::getPathDarkness() {
     int avgLight = (lightLevels[LDR_PATH_L] + lightLevels[LDR_PATH_R]) / 2;
-    return avgLight >= LIGHT_MIN;
+    int darkness = map(avgLight, 0, 4095, 255, 0); // ESP32 ADC: 0-4095
+    return constrain(darkness, 0, 255);
 }
 
 bool LightSensor::isCompartmentOpen() {
     int avgLight = (lightLevels[LDR_COMP_1] + lightLevels[LDR_COMP_2]) / 2;
-    return avgLight > 2000;  // Threshold for compartment light change
-}
-
-bool LightSensor::isBrightEnough() {
-    for(int i = 0; i < LDR_COUNT; i++) {
-        if(lightLevels[i] >= LIGHT_MIN) return true;
-    }
-    return false;
+    return avgLight > COMPARTMENT_LIGHT_THRESHOLD; // define in thresholds.h
 }

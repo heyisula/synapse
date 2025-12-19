@@ -17,11 +17,23 @@
 #define BLUE_R_MAX 100
 #define RED_R_MIN 150
 #define RED_G_MAX 100
+#define GREEN_R_MIN  30   
+#define GREEN_G_MIN 150   
+#define GREEN_B_MAX  70   
+
+#define GREEN_SUM_MIN 300   
 #define BLACK_SUM_MAX 150
 
 // Collision Detection
 #define COLLISION_DISTANCE_FRONT 30  // cm
+#define COLLISION_DISTANCE_BACK 30   // cm
 #define COLLISION_DISTANCE_SIDE 20   // cm
 #define EMERGENCY_STOP_DISTANCE 15   // cm
+
+// Compartment Light Threshold
+#define COMPARTMENT_LIGHT_THRESHOLD 1000  // ADC value
+
+//Path Visibility Threshold
+#define PATH_LIGHT_THRESHOLD 3000        // ADC value
 
 #endif
