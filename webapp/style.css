@@ -368,87 +368,12 @@
         }
 
         @media (max-width: 640px) {
-            body {
-                padding: 10px; /* Keep some padding */
-            }
-            
-            .container {
-                padding: 15px; /* Reasonable padding */
-                border-radius: 12px;
-                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); /* Lighter shadow */
-            }
-            
-            /* Header improvements */
-            .dashboard-header {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 12px;
-                margin-bottom: 15px;
-            }
-            
-            .dashboard-title {
-                justify-content: center;
-                gap: 10px;
-            }
-            
-            .dashboard-title h1 {
-                font-size: 1.4em;
-            }
-            
-            .dashboard-title img {
-                width: 45px;
-                height: 45px;
-            }
-            
-            /* Fix the cluttered header info */
-            .header-info {
-                display: grid;
-                grid-template-columns: 1fr 1fr; /* Two columns */
-                gap: 8px;
-                width: 100%;
-            }
-            
-            #connectionStatus {
-                grid-column: 1 / -1; /* Span both columns */
-                text-align: center;
-                padding: 8px !important;
-                font-size: 0.85em !important;
-            }
-            
-            #lastUpdate {
-                grid-column: 1 / -1; /* Span both columns */
-                text-align: center;
-                padding: 6px !important;
-                font-size: 0.75em !important;
-                background: #f0f0f0;
-                border-radius: 6px;
-            }
-            
-            #userEmail {
-                grid-column: 1 / -1; /* Span both columns */
-                text-align: center;
-                padding: 6px !important;
-                font-size: 0.8em !important;
-                background: transparent;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
-            
-            .logout-button {
-                grid-column: 1 / -1; /* Span both columns */
-                padding: 12px;
-                font-size: 1em;
-            }
-            
-            /* Dashboard grid */
             .dashboard {
                 grid-template-columns: 1fr;
-                gap: 15px;
             }
             
-            .card {
-                padding: 15px;
-                width: 100%; /* Ensure full width */
+            h1 {
+                font-size: 1.5em;
             }
             
             .card.span-2-rows {
@@ -458,48 +383,6 @@
             .card.span-2-cols {
                 grid-column: span 1;
             }
-            
-            .card-title {
-                font-size: 1em;
-                margin-bottom: 12px;
-            }
-            
-            /* Data rows */
-            .data-row {
-                padding: 6px 0;
-            }
-            
-            .label {
-                font-size: 0.9em;
-            }
-            
-            .value {
-                font-size: 1em;
-            }
-            
-            /* Buttons */
-            .button {
-                padding: 12px;
-                font-size: 0.95em;
-            }
-            
-            /* Slider improvements */
-            .slider::-webkit-slider-thumb,
-            .slider::-moz-range-thumb {
-                width: 26px;
-                height: 26px;
-            }
-            
-            /* Buzzer controls */
-            .buzzer-controls {
-                gap: 8px;
-            }
-            
-            .buzzer-btn {
-                padding: 10px 5px;
-                font-size: 0.85em;
-            }
-
         }
 
         .connection-status {
