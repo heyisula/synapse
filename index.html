@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IoT Dashboard - Synaps Health Care</title>
+    <link rel="stylesheet" href="webapp/style.css"> 
+</head>
+<body>
+    <div class="login-container" id="loginPage">
+        <div class="login-box">
+            <div class="login-header">
+               <div><img src="webapp/synapse.png" height="100" width="100"></div>
+                <h1>Synapse Healthcare</h1>
+                <p>Please login to access the dashboard</p>
+            </div>
+
+            <div class="error-message" id="errorMessage">
+                Invalid username or password
+            </div>
+
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="username">Email</label>
+                    <input type="email" id="username" name="username" required autocomplete="username">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required autocomplete="current-password">
+                </div>
+
+                <button type="submit" class="login-button" id="loginButton">Login</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="dashboard-container" id="dashboardPage">
+        <div class="container">
+            <div class="dashboard-header">
+                <div class="dashboard-title">
+                    <img src="webapp/synapse.png" height="60" width="60">
+                    <h1>Synapse Healthcare</h1>
+                </div>
+                <div class="header-info">
+                    <span id="connectionStatus" style="margin-right: 15px; padding: 5px 10px; border-radius: 4px; font-size: 12px; background: #ff9800; color: white;">Connecting...</span>
+                    <span id="userEmail" style="margin-right: 15px; color: #666;"></span>
+                    <span id="lastUpdate" style="margin-right: 15px; color: #999; font-size: 11px;">No updates yet</span>
+                    <button class="logout-button" onclick="handleLogout()">Logout</button>
+                </div>
+            </div>
+            
+            
+            
+            <div class="dashboard">
+                <div class="card">
+                    <div class="card-title">Battery Status</div>
+                    <div class="card-content">
+                        <div class="data-row">
+                            <span class="label">Battery:</span>
+                            <span class="value" id="battery">0%</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="label">Voltage:</span>
+                            <span class="value" id="voltage">0 V</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Health Monitoring</div>
+                    <div class="card-content">
+                        <button class="button" id="heartrate_btn" onclick="toggleHeartRate()">Start</button>
+                        <div class="data-row">
+                            <span class="label">HR:</span>
+                            <span class="value" id="hr">0 bpm</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="label">SpO₂:</span>
+                            <span class="value" id="sp02">0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card span-2-rows">
+                    <div class="card-title">Ultrasonic Obstacle Detection</div>
+                    <div class="card-content">
+                        <div class="data-row">
+                            <span class="label">Left:</span>
+                            <span class="value" id="ultrasonic_left">0 cm</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="label">Right:</span>
+                            <span class="value" id="ultrasonic_right">0 cm</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="label">Center:</span>
+                            <span class="value" id="ultrasonic_center">0 cm</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="label">Rear:</span>
+                            <span class="value" id="ultrasonic_rear">0 cm</span>
+                        </div>
+                        <button class="button" id="ultrasonic_btn" onclick="toggleUltrasonic()" style="margin-top: 10px;">Start</button>
+                    </div>
+                </div>
+
+                <div class="card span-2-rows">
+                    <div class="card-title">Emergency Alarm</div>
+                    <div class="card-content">
+                        <div class="buzzer-controls">
+                            <button class="buzzer-btn" id="buzzer01_btn" onclick="toggleBuzzer(1)">Buzzer 01</button>
+                            <button class="buzzer-btn" id="buzzer02_btn" onclick="toggleBuzzer(2)">Buzzer 02</button>
+                        </div>
+                        <div style="margin-top: 20px;">
+                            <div class="label" style="text-align: center; margin-bottom: 10px;">Buzzer Sound</div>
+                            <input type="range" min="0" max="100" value="50" class="slider" id="buzzer_slider" oninput="updateBuzzerSound(this.value)">
+                            <div class="value" style="text-align: center; margin-top: 8px;">
+                                Sound: <span id="buzzersound">50</span>%
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Environmental Sensors</div>
+                    <div class="card-content">
+                        <div class="data-row">
+                            <span class="label">Temp:</span>
+                            <span class="value" id="temp">0°C</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="label">Humidity:</span>
+                            <span class="value" id="humidity">0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Motion Sensors</div>
+                    <div class="card-content">
+                        <div class="data-row">
+                            <span class="label">Acceleration:</span>
+                            <span class="value" id="acceleration">0 m/s²</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="label">Angular Rate:</span>
+                            <span class="value" id="angular">0°/s</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Colour Recognition</div>
+                    <div class="card-content">
+                        <button class="button" id="colour_btn" onclick="toggleColour()">Start</button>
+                        <div class="color-display" id="color_display" style="background: #ddd;">
+                            <span id="colour" style="color: #333;">No Color</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Compartment Inspection</div>
+                    <div class="card-content">
+                        <button class="button" id="compartment_btn" onclick="toggleCompartment()">Start</button>
+                        <div class="data-row">
+                            <span class="label">Status:</span>
+                            <span class="value" id="compartment_status">
+                                Closed<span class="status-indicator status-closed"></span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Light Level</div>
+                    <div class="card-content">
+                        <div class="data-row">
+                            <span class="label">Lux:</span>
+                            <span class="value" id="lightlevel">0 lux</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Light Adjustment</div>
+                    <div class="card-content">
+                        <div class="light-controls">
+                            <div class="light-control">
+                                <div class="light-label">Left</div>
+                                <input type="range" min="0" max="100" value="50" class="slider" id="light_left_slider" oninput="updateLightLeft(this.value)">
+                                <div class="value" style="text-align: center; margin-top: 5px;">
+                                    <span id="lightadj_left">50</span>%
+                                </div>
+                            </div>
+                            <div class="light-control">
+                                <div class="light-label">Right</div>
+                                <input type="range" min="0" max="100" value="50" class="slider" id="light_right_slider" oninput="updateLightRight(this.value)">
+                                <div class="value" style="text-align: center; margin-top: 5px;">
+                                    <span id="lightadj_right">50</span>%
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getDatabase, ref, onValue, set, get, off } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        
+        // TODO: Replace with your Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBA033hpUU2hqUuE2MtOT_aOtXC9aW3Ji8",
+            authDomain: "synapse-healthcare.firebaseapp.com",
+            databaseURL: "https://synapse-healthcare-default-rtdb.firebaseio.com",
+            projectId: "synapse-healthcare",
+            storageBucket: "synapse-healthcare.firebasestorage.app",
+            messagingSenderId: "881124325802",
+            appId: "1:881124325802:web:897b46b09a688dae1d53d3",
+            measurementId: "G-XYGN1R1CKL"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+        const auth = getAuth(app);
+
+        let dataRef = null; // Store the reference
+        let updateCount = 0; // Track updates for debugging
+
+        function updateConnectionStatus(status, message) {
+            const statusEl = document.getElementById('connectionStatus');
+            if (statusEl) {
+                statusEl.textContent = message;
+                statusEl.style.background = status === 'connected' ? '#4CAF50' : 
+                                           status === 'error' ? '#f44336' : '#ff9800';
+                statusEl.style.color = 'white';
+            }
+        }
+
+        function updateLastUpdateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString();
+            const lastUpdateEl = document.getElementById('lastUpdate');
+            if (lastUpdateEl) {
+                lastUpdateEl.textContent = `Last update: ${timeString}`;
+            }
+        }
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // User is signed in
+                console.log('✅ User signed in:', user.email);
+                document.getElementById('loginPage').style.display = 'none';
+                document.getElementById('dashboardPage').style.display = 'block';
+                document.getElementById('userEmail').textContent = user.email;
+                
+                // Wait a bit for auth token to propagate, then initialize dashboard
+                setTimeout(() => {
+                    initializeDashboard(user);
+                }, 500);
+            } else {
+                // User is signed out
+                console.log('User signed out');
+                document.getElementById('loginPage').style.display = 'flex';
+                document.getElementById('dashboardPage').style.display = 'none';
+                
+                // Remove database listener if exists
+                if (dataRef) {
+                    off(dataRef);
+                    dataRef = null;
+                    console.log('🔌 Database listener removed');
+                }
+            }
+        });
+
+        window.handleLogin = async function(event) {
+            event.preventDefault();
+            
+            const email = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorMessage = document.getElementById('errorMessage');
+            const loginButton = document.getElementById('loginButton');
+            
+            // Disable button during login
+            loginButton.disabled = true;
+            loginButton.textContent = 'Logging in...';
+            
+            try {
+                // Sign in with Firebase Authentication
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                console.log('Successfully logged in:', userCredential.user.email);
+                
+                // Hide error message
+                errorMessage.style.display = 'none';
+                
+            } catch (error) {
+                // Handle authentication errors
+                console.error('Login error:', error);
+                
+                let errorText = 'Login failed. Please try again.';
+                
+                switch(error.code) {
+                    case 'auth/invalid-email':
+                        errorText = 'Invalid email address format.';
+                        break;
+                    case 'auth/user-disabled':
+                        errorText = 'This account has been disabled.';
+                        break;
+                    case 'auth/user-not-found':
+                        errorText = 'No account found with this email.';
+                        break;
+                    case 'auth/wrong-password':
+                        errorText = 'Incorrect password.';
+                        break;
+                    case 'auth/invalid-credential':
+                        errorText = 'Invalid email or password.';
+                        break;
+                    case 'auth/too-many-requests':
+                        errorText = 'Too many failed attempts. Please try again later.';
+                        break;
+                }
+                
+                errorMessage.textContent = errorText;
+                errorMessage.style.display = 'block';
+            } finally {
+                // Re-enable button
+                loginButton.disabled = false;
+                loginButton.textContent = 'Login';
+            }
+        };
+
+        window.handleLogout = async function() {
+            try {
+                await signOut(auth);
+                console.log('User signed out successfully');
+                
+                // Clear form
+                document.getElementById('loginForm').reset();
+                document.getElementById('errorMessage').style.display = 'none';
+                
+            } catch (error) {
+                console.error('Logout error:', error);
+                alert('Failed to logout. Please try again.');
+            }
+        };
+
+        async function initializeDashboard(user) {
+            try {
+                updateConnectionStatus('connecting', 'Connecting...');
+                console.log('Initializing dashboard...');
+                
+                // Create database reference
+                // Changed to root '/' to match Firebase structure
+                dataRef = ref(database, '/');
+                
+                try {
+                    // Try to read once first to check permissions
+                    console.log('Testing database access...');
+                    const snapshot = await get(dataRef);
+                    console.log('Database access granted');
+                    console.log('Initial data:', snapshot.val());
+                    
+                    updateConnectionStatus('connected', 'Connected');
+                    
+                    // Display initial data
+                    if (snapshot.val()) {
+                        updateDisplay(snapshot.val());
+                    }
+                    
+                    // Set up real-time listener
+                    console.log('Setting up real-time listener...');
+                    onValue(dataRef, (snapshot) => {
+                        updateCount++;
+                        console.log(`Update #${updateCount} received at ${new Date().toLocaleTimeString()}`);
+                        
+                        const data = snapshot.val();
+                        console.log('Received data:', data);
+                        
+                        if (data) {
+                            updateDisplay(data);
+                            updateLastUpdateTime();
+                        } else {
+                            console.warn('No data available at /iot_data');
+                        }
+                    }, (error) => {
+                        console.error('Database read error:', error);
+                        updateConnectionStatus('error', 'Permission Error');
+                    });
+                    
+                    console.log('Dashboard initialized successfully');
+                    
+                } catch (readError) {
+                    console.error('Initial read error:', readError);
+                    updateConnectionStatus('error', 'Access Denied');
+                    
+                    alert('Cannot access database. Please check:\n\n' +
+                          '1. Firebase Console > Realtime Database > Rules\n' +
+                          '2. Set rules to allow authenticated users\n' +
+                          '3. User "' + user.email + '" is authenticated');
+                }
+                
+            } catch (error) {
+                console.error('Firebase initialization error:', error);
+                updateConnectionStatus('error', 'Connection Failed');
+            }
+        }
+
+        function updateDisplay(data) {
+            console.log('Updating display with data:', data);
+            
+            // Battery & Voltage
+            if (data.battery !== undefined) {
+                document.getElementById('battery').textContent = data.battery + '%';
+                console.log('Battery:', data.battery);
+            }
+            if (data.voltage !== undefined) {
+                document.getElementById('voltage').textContent = data.voltage + ' V';
+                console.log('Voltage:', data.voltage);
+            }
+            
+            // Acceleration & Angular
+            if (data.acceleration !== undefined) {
+                document.getElementById('acceleration').textContent = data.acceleration + ' m/s²';
+                console.log('Acceleration:', data.acceleration);
+            }
+            if (data.angular !== undefined) {
+                document.getElementById('angular').textContent = data.angular + '°/s';
+                console.log('Angular:', data.angular);
+            }
+            
+            // Buzzer buttons
+            if (data.buzzer01ring !== undefined) {
+                document.getElementById('buzzer01_btn').classList.toggle('active', data.buzzer01ring);
+                console.log('Buzzer 1:', data.buzzer01ring);
+            }
+            if (data.buzzer02ring !== undefined) {
+                document.getElementById('buzzer02_btn').classList.toggle('active', data.buzzer02ring);
+                console.log('Buzzer 2:', data.buzzer02ring);
+            }
+            if (data.buzzersound !== undefined) {
+                document.getElementById('buzzersound').textContent = data.buzzersound;
+                document.getElementById('buzzer_slider').value = data.buzzersound;
+                console.log('Buzzer Sound:', data.buzzersound);
+            }
+            
+            // Colour
+            if (data.colour !== undefined) {
+                const colourText = data.colour || 'No Color';
+                document.getElementById('colour').textContent = colourText;
+                if (data.colour && data.colour !== 'No Color') {
+                    document.getElementById('color_display').style.background = data.colour;
+                    document.getElementById('colour').style.color = 'white';
+                } else {
+                    document.getElementById('color_display').style.background = '#ddd';
+                    document.getElementById('colour').style.color = '#333';
+                }
+                console.log('Colour:', data.colour);
+            }
+            
+            // Compartment status
+            if (data.compartment !== undefined) {
+                let status, statusClass;
+                if (data.compartment === 255) {
+                    status = 'Closed';
+                    statusClass = 'status-closed';
+                } else if (data.compartment >= 0 && data.compartment <= 10) {
+                    status = 'Open';
+                    statusClass = 'status-open';
+                } else {
+                    status = 'Unknown';
+                    statusClass = 'status-closed';
+                }
+                document.getElementById('compartment_status').innerHTML = 
+                    status + '<span class="status-indicator ' + statusClass + '"></span>';
+                console.log('Compartment:', data.compartment, '→', status);
+            }
+            
+            // Health monitoring
+            if (data.hr !== undefined) {
+                document.getElementById('hr').textContent = data.hr + ' bpm';
+                console.log('Heart Rate:', data.hr);
+            }
+            if (data.sp02 !== undefined) {
+                document.getElementById('sp02').textContent = data.sp02 + '%';
+                console.log('SpO2:', data.sp02);
+            }
+            
+            // Environmental
+            if (data.humidity !== undefined) {
+                document.getElementById('humidity').textContent = data.humidity + '%';
+                console.log('Humidity:', data.humidity);
+            }
+            if (data.temp !== undefined) {
+                document.getElementById('temp').textContent = data.temp + '°C';
+                console.log('Temperature:', data.temp);
+            }
+            
+            // Light adjustment
+            if (data.lightadj_left !== undefined) {
+                document.getElementById('lightadj_left').textContent = data.lightadj_left;
+                document.getElementById('light_left_slider').value = data.lightadj_left;
+                console.log('Light Left:', data.lightadj_left);
+            }
+            if (data.lightadj_right !== undefined) {
+                document.getElementById('lightadj_right').textContent = data.lightadj_right;
+                document.getElementById('light_right_slider').value = data.lightadj_right;
+                console.log('Light Right:', data.lightadj_right);
+            }
+            if (data.lightlevel !== undefined) {
+                document.getElementById('lightlevel').textContent = data.lightlevel + ' lux';
+                console.log('Light Level:', data.lightlevel);
+            }
+            
+            // Ultrasonic sensors
+            if (data.ultrasonic_left !== undefined) {
+                document.getElementById('ultrasonic_left').textContent = data.ultrasonic_left + ' cm';
+                console.log('Ultrasonic Left:', data.ultrasonic_left);
+            }
+            if (data.ultrasonic_right !== undefined) {
+                document.getElementById('ultrasonic_right').textContent = data.ultrasonic_right + ' cm';
+                console.log('Ultrasonic Right:', data.ultrasonic_right);
+            }
+            if (data.ultrasonic_center !== undefined) {
+                document.getElementById('ultrasonic_center').textContent = data.ultrasonic_center + ' cm';
+                console.log('Ultrasonic Center:', data.ultrasonic_center);
+            }
+            if (data.ultrasonic_rear !== undefined) {
+                document.getElementById('ultrasonic_rear').textContent = data.ultrasonic_rear + ' cm';
+                console.log('Ultrasonic Rear:', data.ultrasonic_rear);
+            }
+            
+            // Start/Stop butt0ons state
+            if (data.heartrate_start !== undefined) {
+                const btn = document.getElementById('heartrate_btn');
+                btn.classList.toggle('active', data.heartrate_start);
+                btn.textContent = data.heartrate_start ? 'Stop' : 'Start';
+                console.log('Heart Rate Start:', data.heartrate_start);
+            }
+            if (data.ultrasonic_start !== undefined) {
+                const btn = document.getElementById('ultrasonic_btn');
+                btn.classList.toggle('active', data.ultrasonic_start);
+                btn.textContent = data.ultrasonic_start ? 'Stop' : 'Start';
+                console.log('Ultrasonic Start:', data.ultrasonic_start);
+            }
+            if (data.compartment_start !== undefined) {
+                const btn = document.getElementById('compartment_btn');
+                btn.classList.toggle('active', data.compartment_start);
+                btn.textContent = data.compartment_start ? 'Stop' : 'Start';
+                console.log('Compartment Start:', data.compartment_start);
+            }
+            if (data.colour_start !== undefined) {
+                const btn = document.getElementById('colour_btn');
+                btn.classList.toggle('active', data.colour_start);
+                btn.textContent = data.colour_start ? 'Stop' : 'Start';
+                console.log('Colour Start:', data.colour_start);
+            }
+            
+            console.log('Display update complete');
+        }
+        
+        // Heart Rate Monitoring
+        window.toggleHeartRate = async function() {
+            const btn = document.getElementById('heartrate_btn');
+            const currentState = btn.classList.contains('active');
+            
+            try {
+                console.log('Writing heartrate_start:', !currentState);
+                await set(ref(database, '/heartrate_start'), !currentState);
+                console.log('Write successful');
+            } catch (error) {
+                console.error('Error writing to database:', error);
+            }
+        };
+
+        // Ultrasonic Sensors
+        window.toggleUltrasonic = async function() {
+            const btn = document.getElementById('ultrasonic_btn');
+            const currentState = btn.classList.contains('active');
+            
+            try {
+                console.log('Writing ultrasonic_start:', !currentState);
+                await set(ref(database, '/ultrasonic_start'), !currentState);
+                console.log('Write successful');
+            } catch (error) {
+                console.error('Error writing to database:', error);
+            }
+        };
+
+        // Compartment Inspection
+        window.toggleCompartment = async function() {
+            const btn = document.getElementById('compartment_btn');
+            const currentState = btn.classList.contains('active');
+            
+            try {
+                console.log('Writing compartment_start:', !currentState);
+                await set(ref(database, '/compartment_start'), !currentState);
+                console.log('Write successful');
+            } catch (error) {
+                console.error('Error writing to database:', error);
+            }
+        };
+
+        // Colour Recognition
+        window.toggleColour = async function() {
+            const btn = document.getElementById('colour_btn');
+            const currentState = btn.classList.contains('active');
+            
+            try {
+                console.log('Writing colour_start:', !currentState);
+                await set(ref(database, '/colour_start'), !currentState);
+                console.log('Write successful');
+            } catch (error) {
+                console.error('Error writing to database:', error);
+            }
+        };
+
+        // Buzzer Controls
+        window.toggleBuzzer = async function(num) {
+            const btnId = 'buzzer0' + num + '_btn';
+            const btn = document.getElementById(btnId);
+            const currentState = btn.classList.contains('active');
+            
+            try {
+                console.log('Writing buzzer0' + num + 'ring:', !currentState);
+                await set(ref(database, '/buzzer0' + num + 'ring'), !currentState);
+                console.log('Write successful');
+            } catch (error) {
+                console.error('Error writing to database:', error);
+            }
+        };
+
+        // Buzzer Sound Level
+        window.updateBuzzerSound = async function(value) {
+            document.getElementById('buzzersound').textContent = value;
+            try {
+                console.log('Writing buzzersound:', parseInt(value));
+                await set(ref(database, '/buzzersound'), parseInt(value));
+                console.log('Write successful');
+            } catch (error) {
+                console.error('Error writing to database:', error);
+            }
+        };
+
+        // Light Adjustment - Left
+        window.updateLightLeft = async function(value) {
+            document.getElementById('lightadj_left').textContent = value;
+            try {
+                console.log('Writing lightadj_left:', parseInt(value));
+                await set(ref(database, '/lightadj_left'), parseInt(value));
+                console.log('Write successful');
+            } catch (error) {
+                console.error('Error writing to database:', error);
+            }
+        };
+
+        // Light Adjustment - Right
+        window.updateLightRight = async function(value) {
+            document.getElementById('lightadj_right').textContent = value;
+            try {
+                console.log('Writing lightadj_right:', parseInt(value));
+                await set(ref(database, '/lightadj_right'), parseInt(value));
+                console.log('Write successful');
+            } catch (error) {
+                console.error('Error writing to database:', error);
+            }
+        };
+    </script>
+</body>
+</html>
