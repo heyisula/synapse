@@ -466,12 +466,12 @@
             // Compartment status
             if (data.compartment !== undefined) {
                 let status, statusClass;
-                if (data.compartment === 255) {
-                    status = 'Closed';
-                    statusClass = 'status-closed';
-                } else if (data.compartment >= 0 && data.compartment <= 10) {
+                if (data.compartment >= 0 && data.compartment <= 15) {
                     status = 'Open';
                     statusClass = 'status-open';
+                } else if (data.compartment >= 205 && data.compartment <= 225) {
+                    status = 'Closed';
+                    statusClass = 'status-closed';
                 } else {
                     status = 'Unknown';
                     statusClass = 'status-closed';
