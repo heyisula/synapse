@@ -1,4 +1,4 @@
- * {
+* {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -130,6 +130,13 @@
             display: flex;
             align-items: center;
             gap: 20px;
+        }
+
+        .header-info {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
         .logout-button {
@@ -368,10 +375,14 @@
         }
 
         @media (max-width: 640px) {
+            body {
+                padding: 10px;
+            }
+            
             .dashboard-header {
                 flex-direction: column;
                 align-items: stretch;
-                gap: 15px;
+                gap: 12px;
             }
             
             .dashboard-title {
@@ -380,11 +391,11 @@
             }
             
             .dashboard-title h1 {
-                font-size: 1.3em; /* Slightly smaller on mobile */
+                font-size: 1.3em;
             }
             
             .dashboard-title img {
-                width: 40px; /* Smaller logo */
+                width: 40px;
                 height: 40px;
             }
             
@@ -395,43 +406,58 @@
                 width: 100%;
             }
             
-            #connectionStatus,
-            #userEmail,
+            #connectionStatus {
+                display: block;
+                text-align: center;
+                padding: 8px 10px !important;
+                border-radius: 6px;
+                font-size: 0.85em !important;
+                margin: 0 !important;
+            }
+            
             #lastUpdate {
                 display: block;
                 text-align: center;
                 padding: 8px 10px !important;
                 border-radius: 6px;
                 font-size: 0.85em !important;
-            }
-            
-            #connectionStatus {
-                order: 1;
-            }
-            
-            #lastUpdate {
-                order: 2;
                 background: #f0f0f0;
                 color: #666 !important;
+                margin: 0 !important;
             }
             
             #userEmail {
-                order: 3;
+                display: block;
+                text-align: center;
                 background: #f8f9fa;
-                padding: 6px 10px !important;
+                padding: 8px 10px !important;
+                border-radius: 6px;
                 font-size: 0.8em !important;
+                color: #666 !important;
+                margin: 0 !important;
             }
             
             .logout-button {
-                order: 4;
                 width: 100%;
                 padding: 12px 20px;
+                margin: 0 !important;
             }
             
             /* Reduce container padding on mobile */
             .container {
                 padding: 15px;
                 border-radius: 15px;
+            }
+            
+            /* Single column layout on mobile */
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .card.span-2-cols,
+            .card.span-2-rows {
+                grid-column: span 1;
+                grid-row: span 1;
             }
             
             /* Make cards more compact */
@@ -442,6 +468,14 @@
             .card-title {
                 font-size: 1em;
                 margin-bottom: 12px;
+            }
+            
+            .data-row {
+                padding: 6px 0;
+            }
+            
+            .value {
+                font-size: 1em;
             }
         }
 
