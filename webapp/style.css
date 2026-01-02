@@ -368,39 +368,80 @@
         }
 
         @media (max-width: 640px) {
-            .dashboard {
-                grid-template-columns: 1fr;
+            .dashboard-header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 15px;
             }
             
-            h1 {
-                font-size: 1.5em;
+            .dashboard-title {
+                justify-content: center;
+                gap: 10px;
             }
             
-            .card.span-2-rows {
-                grid-row: span 1;
+            .dashboard-title h1 {
+                font-size: 1.3em; /* Slightly smaller on mobile */
             }
             
-            .card.span-2-cols {
-                grid-column: span 1;
-            }
-            body {
-                padding: 10px; /* Reduce padding on mobile */
+            .dashboard-title img {
+                width: 40px; /* Smaller logo */
+                height: 40px;
             }
             
-            .login-box {
-                max-width: 100%; /* Use full width */
-                padding: 30px 20px;
+            .header-info {
+                display: flex;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 10px;
             }
             
-            .slider::-webkit-slider-thumb,
-            .slider::-moz-range-thumb {
-                width: 28px; /* Bigger for easier tapping */
-                height: 28px;
+            #connectionStatus,
+            #userEmail,
+            #lastUpdate {
+                display: block;
+                text-align: center;
+                padding: 8px 10px !important;
+                border-radius: 6px;
+                font-size: 0.85em !important;
             }
             
-            .button, .login-button {
-                padding: 14px 20px; /* Ensure minimum tap target */
+            #connectionStatus {
+                order: 1;
+            }
+            
+            #lastUpdate {
+                order: 2;
+                background: #f0f0f0;
+                color: #666 !important;
+            }
+            
+            #userEmail {
+                order: 3;
+                background: #f8f9fa;
+                padding: 6px 10px !important;
+                font-size: 0.8em !important;
+            }
+            
+            .logout-button {
+                order: 4;
+                width: 100%;
+                padding: 12px 20px;
+            }
+            
+            /* Reduce container padding on mobile */
+            .container {
+                padding: 15px;
+                border-radius: 15px;
+            }
+            
+            /* Make cards more compact */
+            .card {
+                padding: 15px;
+            }
+            
+            .card-title {
                 font-size: 1em;
+                margin-bottom: 12px;
             }
         }
 
