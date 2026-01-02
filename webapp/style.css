@@ -383,6 +383,25 @@
             .card.span-2-cols {
                 grid-column: span 1;
             }
+            body {
+                padding: 10px; /* Reduce padding on mobile */
+            }
+            
+            .login-box {
+                max-width: 100%; /* Use full width */
+                padding: 30px 20px;
+            }
+            
+            .slider::-webkit-slider-thumb,
+            .slider::-moz-range-thumb {
+                width: 28px; /* Bigger for easier tapping */
+                height: 28px;
+            }
+            
+            .button, .login-button {
+                padding: 14px 20px; /* Ensure minimum tap target */
+                font-size: 1em;
+            }
         }
 
         .connection-status {
