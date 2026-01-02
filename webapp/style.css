@@ -368,81 +368,129 @@
         }
 
         @media (max-width: 640px) {
+            body {
+                padding: 5px; /* Even less padding to give content more room */
+            }
+            
+            .container {
+                padding: 12px; /* Reduce container padding significantly */
+                border-radius: 12px;
+                margin: 5px 0; /* Add small vertical margin */
+            }
+            
             .dashboard-header {
                 flex-direction: column;
                 align-items: stretch;
-                gap: 15px;
+                gap: 10px;
+                margin-bottom: 15px; /* Less margin */
             }
             
             .dashboard-title {
                 justify-content: center;
-                gap: 10px;
+                gap: 8px;
+                padding: 8px 0;
             }
             
             .dashboard-title h1 {
-                font-size: 1.3em; /* Slightly smaller on mobile */
+                font-size: 1.2em; /* Even smaller */
             }
             
             .dashboard-title img {
-                width: 40px; /* Smaller logo */
-                height: 40px;
+                width: 35px; /* Smaller logo */
+                height: 35px;
             }
             
             .header-info {
-                display: flex;
-                align-items: center;
-                flex-wrap: wrap;
-                gap: 10px;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 6px;
+                width: 100%;
             }
             
-            #connectionStatus,
-            #userEmail,
-            #lastUpdate {
-                display: block;
-                text-align: center;
-                padding: 8px 10px !important;
-                border-radius: 6px;
-                font-size: 0.85em !important;
-            }
-            
+            /* Make status indicators more compact */
             #connectionStatus {
-                order: 1;
+                padding: 6px 8px !important;
+                font-size: 0.75em !important;
+                border-radius: 4px;
             }
             
             #lastUpdate {
-                order: 2;
+                padding: 5px 8px !important;
+                font-size: 0.7em !important;
                 background: #f0f0f0;
-                color: #666 !important;
+                border-radius: 4px;
             }
             
             #userEmail {
-                order: 3;
+                padding: 5px 8px !important;
+                font-size: 0.75em !important;
                 background: #f8f9fa;
-                padding: 6px 10px !important;
-                font-size: 0.8em !important;
+                border-radius: 4px;
+                word-break: break-all; /* Allow email to break if too long */
             }
             
             .logout-button {
-                order: 4;
                 width: 100%;
-                padding: 12px 20px;
-            }
-            
-            /* Reduce container padding on mobile */
-            .container {
-                padding: 15px;
-                border-radius: 15px;
+                padding: 10px 15px; /* Slightly smaller */
+                font-size: 0.9em;
             }
             
             /* Make cards more compact */
+            .dashboard {
+                grid-template-columns: 1fr;
+                gap: 12px; /* Less gap between cards */
+            }
+            
             .card {
-                padding: 15px;
+                padding: 12px; /* Less padding inside cards */
             }
             
             .card-title {
-                font-size: 1em;
-                margin-bottom: 12px;
+                font-size: 0.95em;
+                margin-bottom: 10px;
             }
+            
+            .card.span-2-rows {
+                grid-row: span 1;
+            }
+            
+            .card.span-2-cols {
+                grid-column: span 1;
+            }
+            
+            /* Make text values smaller */
+            .label {
+                font-size: 0.85em;
+            }
+            
+            .value {
+                font-size: 0.95em;
+            }
+            
+            /* Make buttons more compact */
+            .button, .login-button {
+                padding: 10px 15px;
+                font-size: 0.9em;
+            }
+            
+            /* Slider touch targets */
+            .slider::-webkit-slider-thumb,
+            .slider::-moz-range-thumb {
+                width: 24px;
+                height: 24px;
+            }
+            
+            /* Buzzer buttons more compact */
+            .buzzer-btn {
+                padding: 8px;
+                font-size: 0.85em;
+            }
+            
+            .buzzer-btn::after {
+                font-size: 0.75em;
+                margin-top: 3px;
+            }
+
         }
 
         .connection-status {
