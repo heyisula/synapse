@@ -2,7 +2,6 @@
 #define EMERGENCY_H
 
 #include <Arduino.h>
-#include <atomic>
 #include "motor/movement.h"
 
 class EmergencyStop {
@@ -15,7 +14,7 @@ private:
     unsigned long lastDebounceTime;
     const unsigned long debounceDelay = 50;
     
-    std::atomic<bool> interruptTriggered;
+    volatile bool interruptTriggered;
     
     static EmergencyStop* instance;
     static void IRAM_ATTR handleInterrupt();

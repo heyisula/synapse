@@ -1,5 +1,5 @@
 #include "l298n.h"
-#include "config/pins.h"
+#include "../config/pins.h"
 
 // ===== L298NMotor Implementation =====
 
@@ -9,12 +9,11 @@ L298NMotor::L298NMotor(uint8_t in1, uint8_t in2, uint8_t en, uint8_t pwmChannel)
     isEnabled = true;
     initialized = false;
     
-    // Validate PWM channel (ESP32 supports 0-15)
+    // Validate PWM
     if (PWM_CHANNEL > 15) {
         Serial.print("ERROR: Invalid PWM channel ");
         Serial.print(PWM_CHANNEL);
         Serial.println(". Must be 0-15.");
-        isEnabled = false;
     }
 }
 
@@ -23,12 +22,12 @@ void L298NMotor::begin() {
         Serial.println("ERROR: Motor disabled due to invalid PWM channel");
         return;
     }
-    
+
     pinMode(in1Pin, OUTPUT);
     pinMode(in2Pin, OUTPUT);
     pinMode(enPin, OUTPUT);
     
-    // Setup PWM and validate
+    // Setup PWM
     bool setupSuccess = ledcSetup(PWM_CHANNEL, PWM_FREQ, PWM_RESOLUTION);
     if (!setupSuccess) {
         Serial.print("ERROR: PWM setup failed for channel ");
@@ -47,8 +46,8 @@ void L298NMotor::begin() {
 void L298NMotor::forward(uint8_t speed) {
     if (!isEnabled || !initialized) return;
     
-    digitalWrite(in1Pin, HIGH);
-    digitalWrite(in2Pin, LOW);
+    digitalWrite(in1Pin, LOW);
+    digitalWrite(in2Pin, HIGH);
     
     currentSpeed = constrain(speed, 0, 100);
     uint8_t pwmValue = map(currentSpeed, 0, 100, 0, 255);
@@ -58,8 +57,8 @@ void L298NMotor::forward(uint8_t speed) {
 void L298NMotor::backward(uint8_t speed) {
     if (!isEnabled || !initialized) return;
     
-    digitalWrite(in1Pin, LOW);
-    digitalWrite(in2Pin, HIGH);
+    digitalWrite(in1Pin, HIGH);
+    digitalWrite(in2Pin, LOW);
     
     currentSpeed = constrain(speed, 0, 100);
     uint8_t pwmValue = map(currentSpeed, 0, 100, 0, 255);
@@ -76,8 +75,6 @@ void L298NMotor::stop() {
 }
 
 void L298NMotor::brake() {
-    if (!initialized) return;
-    
     digitalWrite(in1Pin, HIGH);
     digitalWrite(in2Pin, HIGH);
     ledcWrite(PWM_CHANNEL, 255);
@@ -99,7 +96,6 @@ void L298NMotor::setSpeed(uint8_t speed) {
 // ===== L298NController Implementation =====
 
 L298NController::L298NController() {
-    // PWM Channels: 0-3 for the four motors
     leftFrontMotor = new L298NMotor(LEFT_FRONT_IN1, LEFT_FRONT_IN2, LEFT_FRONT_ENA, 0);
     leftBackMotor = new L298NMotor(LEFT_BACK_IN1, LEFT_BACK_IN2, LEFT_BACK_ENB, 1);
     rightFrontMotor = new L298NMotor(RIGHT_FRONT_IN1, RIGHT_FRONT_IN2, RIGHT_FRONT_ENA, 2);
@@ -107,10 +103,8 @@ L298NController::L298NController() {
 }
 
 L298NController::~L298NController() {
-    // Stop all motors before destroying
     allStop();
     
-    // Delete motor objects and set pointers to nullptr
     delete leftFrontMotor;
     leftFrontMotor = nullptr;
     
@@ -130,7 +124,7 @@ void L298NController::begin() {
     rightFrontMotor->begin();
     rightBackMotor->begin();
     
-    // Check if all motors initialized successfully
+    // Check if all motors
     if (!leftFrontMotor->isInitialized() || 
         !leftBackMotor->isInitialized() || 
         !rightFrontMotor->isInitialized() || 

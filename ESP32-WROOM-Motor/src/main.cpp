@@ -1,10 +1,10 @@
 #include <Arduino.h>
-#include "config/pins.h"
 #include "communication/uart.h"
 #include "motor/l298n.h"
 #include "motor/movement.h"
 #include "motor/speed.h"
 #include "safety/emergency.h"
+#include "config/pins.h"
 
 // Global objects
 UARTProtocol uart;

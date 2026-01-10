@@ -23,7 +23,7 @@
 #define EMERGENCY_STOP_PIN 27
 
 // UART Communication
-#define UART_TX 0
+#define UART_TX 1
 #define UART_RX 3
 
 #endif

@@ -2,23 +2,17 @@
 
 EmergencyStop* EmergencyStop::instance = nullptr;
 
-EmergencyStop::EmergencyStop(uint8_t pin, MovementController* movement) 
-    : interruptTriggered(false) {  // Initialize atomic variable in initializer list
+EmergencyStop::EmergencyStop(uint8_t pin, MovementController* movement) {
     buttonPin = pin;
     movementController = movement;
     emergencyActive = false;
     lastButtonState = HIGH;
     lastDebounceTime = 0;
+    interruptTriggered = false;
     instance = this;
 }
 
 void EmergencyStop::begin() {
-    // Null check for movementController
-    if (movementController == nullptr) {
-        Serial.println("ERROR: Movement controller is null in EmergencyStop!");
-        return;
-    }
-    
     pinMode(buttonPin, INPUT_PULLUP);
     
     // Attach interrupt for emergency button (active LOW)
@@ -30,20 +24,14 @@ void EmergencyStop::begin() {
 
 void IRAM_ATTR EmergencyStop::handleInterrupt() {
     if (instance != nullptr) {
-        // Use atomic store operation - thread-safe
-        instance->interruptTriggered.store(true, std::memory_order_release);
+        instance->interruptTriggered = true;
     }
 }
 
 void EmergencyStop::update() {
-    // Null check for movementController
-    if (movementController == nullptr) {
-        return;
-    }
-    
-    // Check if interrupt was triggered using atomic exchange
-    // This atomically reads and clears the flag in one operation
-    if (interruptTriggered.exchange(false, std::memory_order_acquire)) {
+    // Check if interrupt was triggered
+    if (interruptTriggered) {
+        interruptTriggered = false;
         activate();
     }
     
@@ -69,11 +57,6 @@ bool EmergencyStop::checkButton() {
 }
 
 void EmergencyStop::activate() {
-    if (movementController == nullptr) {
-        Serial.println("ERROR: Cannot activate emergency stop - movement controller is null!");
-        return;
-    }
-    
     if (!emergencyActive) {
         emergencyActive = true;
         movementController->emergencyStop();

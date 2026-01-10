@@ -4,7 +4,7 @@
 #include <Arduino.h>
 #include "SerialTransfer.h"
 
-enum MotorCommand {
+enum MotorCommand : uint8_t {
     CMD_STOP = 0,
     CMD_FORWARD,
     CMD_BACKWARD,

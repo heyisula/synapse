@@ -8,23 +8,21 @@ MovementController::MovementController(L298NController* motors) {
 }
 
 void MovementController::begin() {
-    // Null check before using motorController
     if (motorController == nullptr) {
         Serial.println("ERROR: Motor controller is null!");
         return;
     }
-    
+
     motorController->begin();
     stop();
 }
 
 void MovementController::executeCommand(MotorCommand cmd, uint8_t speed) {
-    // Null check before using motorController
     if (motorController == nullptr) {
         Serial.println("ERROR: Motor controller is null!");
         return;
     }
-    
+
     currentCommand = cmd;
     currentSpeed = constrain(speed, 0, 100);
     

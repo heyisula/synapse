@@ -17,9 +17,9 @@ void UARTProtocol::begin() {
 }
 
 bool UARTProtocol::receiveMotorCommand(MotorCommand &cmd, uint8_t &speed) {
-    // Check if a full packet has been received
+
     if (transfer.available()) {
-        // Read command and speed from receive buffer
+
         transfer.rxObj(cmd, 0);
         transfer.rxObj(speed, 1);
         
@@ -27,7 +27,6 @@ bool UARTProtocol::receiveMotorCommand(MotorCommand &cmd, uint8_t &speed) {
         lastReceivedSpeed = speed;
         newDataAvailable = true;
         
-        // Send acknowledgment back to ESP32 S3
         sendAcknowledgment(cmd, speed);
         
         return true;
@@ -36,7 +35,6 @@ bool UARTProtocol::receiveMotorCommand(MotorCommand &cmd, uint8_t &speed) {
 }
 
 void UARTProtocol::sendAcknowledgment(MotorCommand cmd, uint8_t speed) {
-    // Echo back the received command and speed as acknowledgment
     transfer.txObj(cmd, 0);
     transfer.txObj(speed, 1);
     transfer.sendData(2);
