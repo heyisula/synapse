@@ -23,6 +23,7 @@
 #define EMERGENCY_STOP_PIN 27
 
 // UART Communication
-// Uses default Serial pins: RX=3, TX=0
+#define UART_TX 0
+#define UART_RX 3
 
 #endif
