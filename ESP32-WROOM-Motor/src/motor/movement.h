@@ -4,7 +4,7 @@
 #include <Arduino.h>
 #include "l298n.h"
 #include "../communication/uart.h"
-#include "config/constants.h"
+#include "../config/constants.h"
 
 class MovementController {
 private:

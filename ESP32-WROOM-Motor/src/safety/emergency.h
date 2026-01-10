@@ -2,7 +2,7 @@
 #define EMERGENCY_H
 
 #include <Arduino.h>
-#include "motor/movement.h"
+#include "../motor/movement.h"
 
 class EmergencyStop {
 private:
