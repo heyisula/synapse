@@ -1,4 +1,5 @@
 #include "emergency.h"
+#include "../config/debug.h"
 
 EmergencyStop* EmergencyStop::instance = nullptr;
 
@@ -19,7 +20,7 @@ void EmergencyStop::begin() {
     attachInterrupt(digitalPinToInterrupt(buttonPin), handleInterrupt, FALLING);
     
     emergencyActive = false;
-    Serial.println("Emergency Stop System Initialized");
+    DEBUG_PRINTLN("Emergency Stop System Initialized");
 }
 
 void IRAM_ATTR EmergencyStop::handleInterrupt() {
@@ -60,13 +61,13 @@ void EmergencyStop::activate() {
     if (!emergencyActive) {
         emergencyActive = true;
         movementController->emergencyStop();
-        Serial.println("⚠️ EMERGENCY STOP ACTIVATED!");
+        DEBUG_PRINTLN("⚠️ EMERGENCY STOP ACTIVATED!");
     }
 }
 
 void EmergencyStop::reset() {
     emergencyActive = false;
-    Serial.println("Emergency Stop Reset");
+    DEBUG_PRINTLN("Emergency Stop Reset");
 }
 
 bool EmergencyStop::isEmergencyActive() {

@@ -1,5 +1,7 @@
 #include "l298n.h"
 #include "../config/pins.h"
+#include "../config/debug.h"
+#include "../config/constants.h"
 
 // ===== L298NMotor Implementation =====
 
@@ -11,15 +13,15 @@ L298NMotor::L298NMotor(uint8_t in1, uint8_t in2, uint8_t en, uint8_t pwmChannel)
     
     // Validate PWM
     if (PWM_CHANNEL > 15) {
-        Serial.print("ERROR: Invalid PWM channel ");
-        Serial.print(PWM_CHANNEL);
-        Serial.println(". Must be 0-15.");
+        DEBUG_PRINT("ERROR: Invalid PWM channel ");
+        DEBUG_PRINT(PWM_CHANNEL);
+        DEBUG_PRINTLN(". Must be 0-15.");
     }
 }
 
 void L298NMotor::begin() {
     if (!isEnabled) {
-        Serial.println("ERROR: Motor disabled due to invalid PWM channel");
+        DEBUG_PRINTLN("ERROR: Motor disabled due to invalid PWM channel");
         return;
     }
 
@@ -30,8 +32,8 @@ void L298NMotor::begin() {
     // Setup PWM
     bool setupSuccess = ledcSetup(PWM_CHANNEL, PWM_FREQ, PWM_RESOLUTION);
     if (!setupSuccess) {
-        Serial.print("ERROR: PWM setup failed for channel ");
-        Serial.println(PWM_CHANNEL);
+        DEBUG_PRINT("ERROR: PWM setup failed for channel ");
+        DEBUG_PRINTLN(PWM_CHANNEL);
         isEnabled = false;
         initialized = false;
         return;
@@ -129,7 +131,7 @@ void L298NController::begin() {
         !leftBackMotor->isInitialized() || 
         !rightFrontMotor->isInitialized() || 
         !rightBackMotor->isInitialized()) {
-        Serial.println("WARNING: One or more motors failed to initialize");
+        DEBUG_PRINTLN("WARNING: One or more motors failed to initialize");
     }
     
     allStop();

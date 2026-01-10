@@ -1,4 +1,5 @@
 #include "movement.h"
+#include "../config/debug.h"
 
 MovementController::MovementController(L298NController* motors) {
     motorController = motors;
@@ -9,7 +10,7 @@ MovementController::MovementController(L298NController* motors) {
 
 void MovementController::begin() {
     if (motorController == nullptr) {
-        Serial.println("ERROR: Motor controller is null!");
+        DEBUG_PRINTLN("ERROR: Motor controller is null!");
         return;
     }
 
@@ -19,7 +20,7 @@ void MovementController::begin() {
 
 void MovementController::executeCommand(MotorCommand cmd, uint8_t speed) {
     if (motorController == nullptr) {
-        Serial.println("ERROR: Motor controller is null!");
+        DEBUG_PRINTLN("ERROR: Motor controller is null!");
         return;
     }
 

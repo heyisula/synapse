@@ -1,7 +1,8 @@
 #include "uart.h"
 #include "../config/pins.h"
+#include "../config/constants.h"
+#include "../config/debug.h"
 
-#define UART_BAUD_RATE 115200
 
 UARTProtocol::UARTProtocol() {
     serial = &Serial;
@@ -13,7 +14,7 @@ UARTProtocol::UARTProtocol() {
 void UARTProtocol::begin() {
     serial->begin(UART_BAUD_RATE, SERIAL_8N1, UART_RX, UART_TX);
     transfer.begin(*serial);
-    Serial.println("UART Communication Started - ESP32 WROOM");
+    DEBUG_PRINTLN("UART Communication Started - ESP32 WROOM");
 }
 
 bool UARTProtocol::receiveMotorCommand(MotorCommand &cmd, uint8_t &speed) {
