@@ -3,7 +3,10 @@
 
 #include <Arduino.h>
 #include "l298n.h"
-#include "../communication/uart.h"
+#include "communication/uart.h"
+
+// Turn speed ratio constant (percentage)
+#define TURN_SPEED_RATIO 30
 
 class MovementController {
 private:

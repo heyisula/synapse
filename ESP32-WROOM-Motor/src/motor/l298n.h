@@ -10,6 +10,7 @@ private:
     uint8_t enPin;
     uint8_t currentSpeed;
     bool isEnabled;
+    bool initialized;
     
     const uint8_t PWM_CHANNEL;
     const uint32_t PWM_FREQ = 5000;
@@ -24,6 +25,7 @@ public:
     void brake();
     uint8_t getCurrentSpeed();
     void setSpeed(uint8_t speed);
+    bool isInitialized() { return initialized; }
 };
 
 class L298NController {
@@ -35,6 +37,7 @@ private:
 
 public:
     L298NController();
+    ~L298NController(); // Destructor to prevent memory leak
     void begin();
     void allForward(uint8_t speed);
     void allBackward(uint8_t speed);

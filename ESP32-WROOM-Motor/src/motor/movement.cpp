@@ -8,11 +8,23 @@ MovementController::MovementController(L298NController* motors) {
 }
 
 void MovementController::begin() {
+    // Null check before using motorController
+    if (motorController == nullptr) {
+        Serial.println("ERROR: Motor controller is null!");
+        return;
+    }
+    
     motorController->begin();
     stop();
 }
 
 void MovementController::executeCommand(MotorCommand cmd, uint8_t speed) {
+    // Null check before using motorController
+    if (motorController == nullptr) {
+        Serial.println("ERROR: Motor controller is null!");
+        return;
+    }
+    
     currentCommand = cmd;
     currentSpeed = constrain(speed, 0, 100);
     
@@ -62,6 +74,8 @@ void MovementController::executeCommand(MotorCommand cmd, uint8_t speed) {
 }
 
 void MovementController::stop() {
+    if (motorController == nullptr) return;
+    
     motorController->allStop();
     currentCommand = CMD_STOP;
     currentSpeed = 0;
@@ -69,6 +83,8 @@ void MovementController::stop() {
 }
 
 void MovementController::emergencyStop() {
+    if (motorController == nullptr) return;
+    
     motorController->allBrake();
     currentCommand = CMD_EMERGENCY_STOP;
     currentSpeed = 0;
@@ -76,34 +92,44 @@ void MovementController::emergencyStop() {
 }
 
 void MovementController::moveForward(uint8_t speed) {
+    if (motorController == nullptr) return;
     motorController->allForward(speed);
 }
 
 void MovementController::moveBackward(uint8_t speed) {
+    if (motorController == nullptr) return;
     motorController->allBackward(speed);
 }
 
 void MovementController::turnLeft(uint8_t speed) {
-    // Turn left by slowing down left motors
-    uint8_t reducedSpeed = speed * 0.3;  // Left side at 30% speed
+    if (motorController == nullptr) return;
+    
+    // Turn left by slowing down left motors - using integer math
+    uint8_t reducedSpeed = (speed * TURN_SPEED_RATIO) / 100;  // Left side at 30% speed
     motorController->leftSideForward(reducedSpeed);
     motorController->rightSideForward(speed);
 }
 
 void MovementController::turnRight(uint8_t speed) {
-    // Turn right by slowing down right motors
-    uint8_t reducedSpeed = speed * 0.3;  // Right side at 30% speed
+    if (motorController == nullptr) return;
+    
+    // Turn right by slowing down right motors - using integer math
+    uint8_t reducedSpeed = (speed * TURN_SPEED_RATIO) / 100;  // Right side at 30% speed
     motorController->leftSideForward(speed);
     motorController->rightSideForward(reducedSpeed);
 }
 
 void MovementController::rotateLeft(uint8_t speed) {
+    if (motorController == nullptr) return;
+    
     // Rotate in place - left motors backward, right motors forward
     motorController->leftSideBackward(speed);
     motorController->rightSideForward(speed);
 }
 
 void MovementController::rotateRight(uint8_t speed) {
+    if (motorController == nullptr) return;
+    
     // Rotate in place - left motors forward, right motors backward
     motorController->leftSideForward(speed);
     motorController->rightSideBackward(speed);

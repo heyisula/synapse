@@ -4,7 +4,7 @@
 #define UART_BAUD_RATE 115200
 
 UARTProtocol::UARTProtocol() {
-    serial = &Serial;  // Using Serial (UART0) on ESP32 WROOM
+    serial = &Serial;
     newDataAvailable = false;
     lastReceivedCommand = CMD_STOP;
     lastReceivedSpeed = 0;
