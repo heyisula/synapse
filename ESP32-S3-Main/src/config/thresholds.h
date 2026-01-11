@@ -9,36 +9,22 @@
 #define LIGHT_MIN 200                // Lux
 #define LIGHT_MAX 800                // Lux
 
-// Color Detection Thresholds
-#define BLACK_SUM_MAX 10        // Below this = too dark to read
-// WHITE (Patients) - all channels relatively high AND similar
-#define WHITE_R_MIN 12          
-#define WHITE_G_MIN 12          
-#define WHITE_B_MIN 12
-#define WHITE_BALANCE_TOLERANCE 6  // R, G, B should be within 5 of each other
-// BLUE (Surgeons/Doctors) - blue higher than red
-#define BLUE_B_MIN 10           
-#define BLUE_R_MAX 8
-#define BLUE_DIFF_MIN 3         // Blue should be at least 3 higher than red
-// GREEN (Nurses) - green higher than others
-#define GREEN_G_MIN 8          
-#define GREEN_R_MAX 6
-#define GREEN_B_MAX 6
-#define GREEN_DIFF_MIN 2        // Green should be at least 2 higher
-// RED (Medical Students) - red higher than green
-#define RED_R_MIN 8
-#define RED_G_MAX 5
-#define RED_DIFF_MIN 3          // Red should be at least 3 higher than green
-// PURPLE (Minor Staff) - both red and blue high, green low
-#define PURPLE_R_MIN 8
-#define PURPLE_B_MIN 8
-#define PURPLE_G_MAX 5
-#define PURPLE_SUM_MIN 20       // Total must be reasonably high
+// Color Sensor Thresholds
+#define BLACK_SUM_MAX 30
+#define WHITE_R_MIN 25
+#define WHITE_G_MIN 25
+#define WHITE_B_MIN 30
+#define WHITE_BALANCE_TOLERANCE 15
+#define BLUE_B_MIN 18
+#define BLUE_DIFF_MIN 5
+#define GREEN_G_MIN 12
+#define GREEN_DIFF_MIN 3
+#define RED_R_MIN 20
+#define RED_DIFF_MIN 10
 // Temporal averaging
-#define COLOR_AVG_SAMPLES        5
-// Auto-calibration
-#define AMBIENT_ADAPT_RATE       0.05f   // Slow adaptation
-#define AMBIENT_UPDATE_THRESHOLD 15      // Ignore strong colors
+#define COLOR_AVG_SAMPLES 5
+#define AMBIENT_ADAPT_RATE 0.05f
+#define AMBIENT_UPDATE_THRESHOLD 15
 
 
 // Collision Detection

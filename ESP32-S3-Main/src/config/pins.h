@@ -46,7 +46,7 @@
 #define ROTARY_CLK 38
 
 // Color Sensor
-#define COLOR_OUT 0
+#define COLOR_OUT 14
 #define COLOR_S0 47
 #define COLOR_S1 48
 #define COLOR_S2 20

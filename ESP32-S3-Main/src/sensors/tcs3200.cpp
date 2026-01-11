@@ -24,9 +24,8 @@ void ColorSensor::begin() {
     pinMode(COLOR_S3, OUTPUT);
     pinMode(COLOR_OUT, INPUT);
 
-    // Set frequency scaling to 100%
     digitalWrite(COLOR_S0, HIGH);
-    digitalWrite(COLOR_S1, HIGH);
+    digitalWrite(COLOR_S1, LOW);
 
     delay(100);
     calibrate();
@@ -100,79 +99,82 @@ ColorType ColorSensor::getColorType() {
     int g = currentColor.green;
     int b = currentColor.blue;
 
-    // ---- Ambient compensation ----
+    // Ambient compensation
     r = max(0, r - ambientClear);
     g = max(0, g - ambientClear);
     b = max(0, b - ambientClear);
 
     int sum = r + g + b;
-    int maxVal = max(r, max(g, b));
-    int minVal = min(r, min(g, b));
-    int diff   = maxVal - minVal;
+    
+    Serial.print("RGB(adj): R=");
+    Serial.print(r); Serial.print(" G=");
+    Serial.print(g); Serial.print(" B=");
+    Serial.print(b); Serial.print(" SUM=");
+    Serial.println(sum);
 
-    // ---- Debug output ----
-    Serial.print("RGB(avg, adj): ");
-    Serial.print(r); Serial.print(", ");
-    Serial.print(g); Serial.print(", ");
-    Serial.print(b);
-    Serial.print(" | Ambient=");
-    Serial.print(ambientClear);
-    Serial.print(" | Sum=");
-    Serial.print(sum);
-    Serial.print(" | Diff=");
-    Serial.println(diff);
-
-    // ---- BLACK ----
+    // ---- TOO DARK ----
     if (sum <= BLACK_SUM_MAX) {
-        Serial.println("Detected: BLACK / UNKNOWN");
+        Serial.println("-> Too dark to read");
         return COLOR_UNKNOWN;
     }
 
-    // ---- WHITE ----
-    if (r >= WHITE_R_MIN &&
-        g >= WHITE_G_MIN &&
-        b >= WHITE_B_MIN &&
-        diff <= WHITE_BALANCE_TOLERANCE) {
+    // Calculate normalized ratios (0.0 to 1.0)
+    float rRatio = (float)r / sum;
+    float gRatio = (float)g / sum;
+    float bRatio = (float)b / sum;
+    
+    Serial.print("Ratios: R=");
+    Serial.print(rRatio, 3); Serial.print(" G=");
+    Serial.print(gRatio, 3); Serial.print(" B=");
+    Serial.println(bRatio, 3);
 
-        Serial.println("Detected: WHITE");
-        return COLOR_WHITE;
-    }
+    // ---- RED: R is strongly dominant ----
+    // R=21-40, G=5-9, B=7-12
 
-    // ---- BLUE ----
-    if (b >= BLUE_B_MIN && 
-        b > r + BLUE_DIFF_MIN && 
-        b > g + BLUE_DIFF_MIN) {
-
-        Serial.println("Detected: BLUE");
-        return COLOR_BLUE;
-    }
-
-    // ---- GREEN ----
-    if (g >= GREEN_G_MIN &&
-        g > r + GREEN_DIFF_MIN &&
-        g > b + GREEN_DIFF_MIN) {
-
-        Serial.println("Detected: GREEN");
-        return COLOR_GREEN;
-    }
-
-    // ---- RED ----
-    if (r >= RED_R_MIN &&
-        r > g + RED_DIFF_MIN) {
-
-        Serial.println("Detected: RED");
+    if (r >= RED_R_MIN && 
+        r > g + RED_DIFF_MIN && 
+        r > b + RED_DIFF_MIN &&  // ← ADD THIS LINE
+        rRatio > 0.60) { 
+        Serial.println("-> RED");
         return COLOR_RED;
     }
 
-    // ---- PURPLE ----
-    if (r >= PURPLE_R_MIN &&
-        b >= PURPLE_B_MIN &&
-        g <= PURPLE_G_MAX) {
-
-        Serial.println("Detected: PURPLE");
-        return COLOR_PURPLE;
+    // ---- BLUE: B is dominant ----
+    // R=7-16, G=13-32, B=20-47
+    if (b >= BLUE_B_MIN && 
+        b > r + BLUE_DIFF_MIN && 
+        b > g + 3 &&
+        bRatio > 0.40) {  
+        Serial.println("-> BLUE");
+        return COLOR_BLUE;
+    }
+    // ---- WHITE: Balanced RGB ----
+    // R=27-52, G=26-52, B=33-62
+    if (r >= WHITE_R_MIN && 
+        g >= WHITE_G_MIN && 
+        b >= WHITE_B_MIN) {
+        
+        int maxVal = max(r, max(g, b));
+        int minVal = min(r, min(g, b));
+        int diff = maxVal - minVal;
+        
+        if (diff <= WHITE_BALANCE_TOLERANCE) {
+            Serial.println("-> WHITE");
+            return COLOR_WHITE;
+        }
     }
 
-    Serial.println("Detected: UNKNOWN");
+    // ---- GREEN: G is dominant ----
+    //  R=7-19, G=9-27, B=6-16
+
+    if (g >= GREEN_G_MIN && 
+        g > r + GREEN_DIFF_MIN && 
+        g > b + GREEN_DIFF_MIN && 
+        gRatio > 0.35) {  
+        Serial.println("-> GREEN");
+        return COLOR_GREEN;
+    }
+
+    Serial.println("-> UNKNOWN");
     return COLOR_UNKNOWN;
 }

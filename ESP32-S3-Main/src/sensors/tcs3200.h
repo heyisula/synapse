@@ -6,10 +6,9 @@
 #include "../config/thresholds.h"
 
 enum ColorType {
-    COLOR_WHITE,    //Patients
+    COLOR_WHITE,    //Minor Staaff
     COLOR_BLUE,     //Surgeon | Doctor
     COLOR_RED,      //Medical Students
-    COLOR_PURPLE,   //Minor Staff
     COLOR_GREEN,    //Nurses
     COLOR_UNKNOWN
 };

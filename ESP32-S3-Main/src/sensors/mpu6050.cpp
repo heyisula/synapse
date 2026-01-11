@@ -80,6 +80,10 @@ void MotionTracker::autoCalibrate() {
         sumGY += gyro_y_raw;
         sumRoll += rollAcc;
         sumPitch += pitchAcc;
+
+        if ((i + 1) % 10 == 0) {
+            Serial.print(F("Sample ")); Serial.print(i + 1); Serial.println(F(" done"));
+        }
         
         delay(10);
     }
