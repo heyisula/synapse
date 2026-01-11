@@ -15,83 +15,100 @@ void FirebaseManager::begin(const char* apiKey,
 
     Firebase.begin(&config, &auth);
     Firebase.reconnectWiFi(true);
+
     Serial.println("Firebase Connected!");
     initialized = true;
+}
+bool FirebaseManager::ready() {
+    return initialized && Firebase.ready();
 }
 
 void FirebaseManager::update() {
     // Reserved for future background tasks if needed
 }
 
-bool FirebaseManager::ready() {
-    return initialized && Firebase.ready();
-}
+bool FirebaseManager::sendData(const FirebaseTxData& d) {
+    if (!ready()) return false;
 
-void FirebaseManager::sendData(const FirebaseTxData& d) {
-    if (!ready()) return;
+    FirebaseJson json;
 
-    Firebase.setInt (fbdo, "/sensors/acceleration", d.acceleration);
-    Firebase.setInt (fbdo, "/sensors/angular", d.angular);
-    Firebase.setInt (fbdo, "/sensors/battery", d.battery);
-    Firebase.setInt (fbdo, "/sensors/voltage", d.voltage);
+    // Sensors - SEND ONLY
+    json.set("acceleration", d.acceleration);
+    json.set("angular", d.angular);
+    json.set("battery", d.battery);
+    json.set("voltage", d.voltage);
 
-    Firebase.setInt (fbdo, "/environment/temp", d.temp);
-    Firebase.setInt (fbdo, "/environment/humidity", d.humidity);
-    Firebase.setInt (fbdo, "/environment/lightlevel", d.lightlevel);
+    // Environment - SEND ONLY
+    json.set("temp", d.temp);
+    json.set("humidity", d.humidity);
+    json.set("lightlevel", d.lightlevel);
 
-    Firebase.setInt (fbdo, "/light/left", d.lightadj_left);
-    Firebase.setInt (fbdo, "/light/right", d.lightadj_right);
+    // Health - SEND ONLY
+    json.set("hr", d.hr);
+    json.set("sp02", d.sp02);
 
-    Firebase.setInt (fbdo, "/health/hr", d.hr);
-    Firebase.setInt (fbdo, "/health/sp02", d.sp02);
-    Firebase.setBool(fbdo, "/health/start", d.heartrate_start);
+    // Ultrasonic - SEND ONLY
+    json.set("ultrasonic_center", d.ultrasonic_center);
+    json.set("ultrasonic_left", d.ultrasonic_left);
+    json.set("ultrasonic_rear", d.ultrasonic_rear);
+    json.set("ultrasonic_right", d.ultrasonic_right);
 
-    Firebase.setInt (fbdo, "/ultrasonic/center", d.ultrasonic_center);
-    Firebase.setInt (fbdo, "/ultrasonic/left", d.ultrasonic_left);
-    Firebase.setInt (fbdo, "/ultrasonic/rear", d.ultrasonic_rear);
-    Firebase.setInt (fbdo, "/ultrasonic/right", d.ultrasonic_right);
-    Firebase.setBool(fbdo, "/ultrasonic/start", d.ultrasonic_start);
+    // Color - SEND ONLY
+    json.set("colour", d.colour);
 
-    Firebase.setBool(fbdo, "/buzzer/one", d.buzzer01ring);
-    Firebase.setBool(fbdo, "/buzzer/two", d.buzzer02ring);
-    Firebase.setInt (fbdo, "/buzzer/sound", d.buzzersound);
+    // Compartment - SEND ONLY
+    json.set("compartment", d.compartment);
 
-    Firebase.setString(fbdo, "/led/colour", d.colour);
-    Firebase.setBool  (fbdo, "/led/start", d.colour_start);
+    if (!Firebase.updateNode(fbdo, "/", json)) {
+        Serial.print("Firebase TX failed: ");
+        Serial.println(fbdo.errorReason());
+        return false;
+    }
 
-    Firebase.setInt (fbdo, "/compartment/id", d.compartment);
-    Firebase.setBool(fbdo, "/compartment/start", d.compartment_start);
+    return true;
 }
 
 bool FirebaseManager::receiveData(FirebaseRxData& d) {
     if (!ready()) return false;
 
-    if (Firebase.getBool(fbdo, "/buzzer/one"))
-        d.buzzer01ring = fbdo.boolData();
+    if (!Firebase.getJSON(fbdo, "/")) {
+        Serial.print("Firebase RX failed: ");
+        Serial.println(fbdo.errorReason());
+        return false;
+    }
 
-    if (Firebase.getBool(fbdo, "/buzzer/two"))
-        d.buzzer02ring = fbdo.boolData();
+    FirebaseJson& json = fbdo.jsonObject();
+    FirebaseJsonData jd;
 
-    if (Firebase.getInt(fbdo, "/buzzer/sound"))
-        d.buzzersound = fbdo.intData();
+    // Buzzer control - RECEIVE ONLY
+    json.get(jd, "buzzer01ring");
+    if (jd.success) d.buzzer01ring = jd.boolValue;
 
-    if (Firebase.getString(fbdo, "/led/colour"))
-        d.colour = fbdo.stringData();
+    json.get(jd, "buzzer02ring");
+    if (jd.success) d.buzzer02ring = jd.boolValue;
 
-    if (Firebase.getBool(fbdo, "/led/start"))
-        d.colour_start = fbdo.boolData();
+    json.get(jd, "buzzersound");
+    if (jd.success) d.buzzersound = jd.intValue;
 
-    if (Firebase.getInt(fbdo, "/compartment/id"))
-        d.compartment = fbdo.intData();
+    // LED brightness control - RECEIVE ONLY
+    json.get(jd, "lightadj_left");
+    if (jd.success) d.lightadj_left = jd.intValue;
 
-    if (Firebase.getBool(fbdo, "/compartment/start"))
-        d.compartment_start = fbdo.boolData();
+    json.get(jd, "lightadj_right");
+    if (jd.success) d.lightadj_right = jd.intValue;
 
-    if (Firebase.getBool(fbdo, "/health/start"))
-        d.heartrate_start = fbdo.boolData();
+    // Sensor start/stop flags - RECEIVE ONLY
+    json.get(jd, "colour_start");
+    if (jd.success) d.colour_start = jd.boolValue;
 
-    if (Firebase.getBool(fbdo, "/ultrasonic/start"))
-        d.ultrasonic_start = fbdo.boolData();
+    json.get(jd, "compartment_start");
+    if (jd.success) d.compartment_start = jd.boolValue;
+
+    json.get(jd, "heartrate_start");
+    if (jd.success) d.heartrate_start = jd.boolValue;
+
+    json.get(jd, "ultrasonic_start");
+    if (jd.success) d.ultrasonic_start = jd.boolValue;
 
     return true;
 }

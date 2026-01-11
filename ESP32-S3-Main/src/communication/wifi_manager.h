@@ -18,6 +18,7 @@ private:
     String password;
     unsigned long lastReconnectAttempt;
     int reconnectInterval;
+    int reconnectAttempts;
 
     void checkConnection();
 
@@ -26,8 +27,8 @@ public:
     void begin(const char* ssid, const char* password);
     void update();
 
-    bool isConnected() { return connected; }
-    WiFiStatus getStatus();
+    bool isConnected() const { return connected; }
+    WiFiStatus getStatus() const;
 
     void disconnect();
     void reconnect();

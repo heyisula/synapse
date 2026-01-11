@@ -1,8 +1,10 @@
 #include "wifi_manager.h"
 
-WiFiManager::WiFiManager() 
-    : connected(false), ssid(""), password(""),
-      lastReconnectAttempt(0), reconnectInterval(30000) {}
+WiFiManager::WiFiManager() : 
+        connected(false),
+        ssid(""), 
+        password(""),
+        lastReconnectAttempt(0), reconnectInterval(10000), reconnectAttempts(0) {}
 
 void WiFiManager::begin(const char* wifiSSID, const char* wifiPassword) {
     ssid = String(wifiSSID);
@@ -14,7 +16,7 @@ void WiFiManager::begin(const char* wifiSSID, const char* wifiPassword) {
     WiFi.mode(WIFI_STA);
     WiFi.begin(ssid.c_str(), password.c_str());
 
-    lastReconnectAttempt = millis();  // track time for non-blocking reconnect
+    lastReconnectAttempt = millis();
 }
 
 void WiFiManager::update() {
@@ -31,34 +33,37 @@ void WiFiManager::checkConnection() {
             Serial.println("WiFi connected!");
             Serial.print("IP Address: ");
             Serial.println(WiFi.localIP());
+            reconnectAttempts = 0;
         } else {
             Serial.println("WiFi disconnected!");
         }
     }
 
-    // Non-blocking reconnect: only attempt after interval
     if (!connected && (millis() - lastReconnectAttempt >= reconnectInterval)) {
         lastReconnectAttempt = millis();
         reconnect();
     }
 }
 
-WiFiStatus WiFiManager::getStatus() {
+WiFiStatus WiFiManager::getStatus() const {
     WiFiStatus status;
     status.connected = connected;
     status.ssid = ssid;
     status.rssi = WiFi.RSSI();
-    status.ipAddress = WiFi.localIP().toString();
+    status.ipAddress = connected ? WiFi.localIP().toString() : "0.0.0.0";
     return status;
 }
 
 void WiFiManager::disconnect() {
-    WiFi.disconnect();
+    WiFi.disconnect(true);
     connected = false;
-    Serial.println("WiFi disconnected");
+    reconnectAttempts = 0;
+    Serial.println("WiFi disconnected manually");
 }
 
 void WiFiManager::reconnect() {
-    Serial.println("Attempting WiFi reconnection...");
-    WiFi.reconnect();
+    reconnectAttempts++;
+    Serial.print("Attempting WiFi reconnection, attempt #");
+    Serial.println(reconnectAttempts);
+    WiFi.begin(ssid.c_str(), password.c_str());
 }

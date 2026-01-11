@@ -17,13 +17,18 @@ private:
     int lightLevels[LDR_COUNT];
     unsigned long lastReadTime;
     
+    bool isCompartmentMonitoringActive;
+    int lastCompartmentState;
 public:
     LightSensor();
     void begin();
     void update();
     int getLightLevel(LDRPosition pos);
-    int getPathDarkness();           // returns 0-255 darkness for LEDs
-    bool isCompartmentOpen();        // true if compartment open
+    int getPathDarkness();
+    bool isCompartmentOpen();
+
+    int getPathLightLevel();
+    int monitorCompartment(bool compartment_start);
 };
 
 #endif

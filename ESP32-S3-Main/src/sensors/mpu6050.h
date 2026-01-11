@@ -26,7 +26,7 @@ private:
     float gyroYOffset;
 
     // Filter constants (vehicle optimized)
-    static constexpr float ALPHA = 0.93f;
+    static constexpr float ALPHA = 0.98f;  // 98% gyro, 2% accel
     static constexpr float GYRO_DEADBAND  = 0.3f;
     static constexpr float ACCEL_DEADBAND = 0.015f;
 

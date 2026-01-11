@@ -34,6 +34,9 @@ private:
     bool bufferFilled;
 
 
+    bool isColorSensingActive;
+    String lastDetectedColor;
+    
 public:
     ColorSensor();
     void begin();
@@ -41,6 +44,10 @@ public:
     void update();
     RGBColor getRGB();
     ColorType getColorType();
+
+
+    String monitorColor(bool colour_start);
+    String colorTypeToString(ColorType type);
 };
 
 #endif

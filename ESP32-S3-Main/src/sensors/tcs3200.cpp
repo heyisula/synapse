@@ -178,3 +178,46 @@ ColorType ColorSensor::getColorType() {
     Serial.println("-> UNKNOWN");
     return COLOR_UNKNOWN;
 }
+
+String ColorSensor::colorTypeToString(ColorType type) {
+    switch(type) {
+        case COLOR_WHITE:   return "WHITE";
+        case COLOR_BLUE:    return "BLUE";
+        case COLOR_RED:     return "RED";
+        case COLOR_GREEN:   return "GREEN";
+        case COLOR_UNKNOWN: return "UNKNOWN";
+        default:            return "UNKNOWN";
+    }
+}
+
+String ColorSensor::monitorColor(bool colour_start) {
+    if (colour_start) {
+        if (!isColorSensingActive) {
+            isColorSensingActive = true;
+            Serial.println("Color sensing STARTED");
+            lastDetectedColor = "UNKNOWN";
+        }
+        calibrate();
+        update();
+        
+        ColorType detectedType = getColorType();
+        String detectedColorStr = colorTypeToString(detectedType);
+        
+        if (detectedColorStr != lastDetectedColor) {
+            lastDetectedColor = detectedColorStr;
+            Serial.print("Color changed to: ");
+            Serial.println(lastDetectedColor);
+        }
+        
+        return lastDetectedColor;
+    } 
+    else {
+        if (isColorSensingActive) {
+            isColorSensingActive = false;
+            Serial.println("Color sensing STOPPED");
+            lastDetectedColor = "UNKNOWN";
+        }
+        
+        return "UNKNOWN";
+    }
+}

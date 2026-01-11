@@ -47,3 +47,60 @@ bool LightSensor::isCompartmentOpen() {
     int avgLight = (lightLevels[LDR_COMP_1] + lightLevels[LDR_COMP_2]) / 2;
     return avgLight > COMPARTMENT_LIGHT_THRESHOLD; // define in thresholds.h
 }
+
+int LightSensor::getPathLightLevel() {
+    update();
+    int adcValue = (lightLevels[LDR_PATH_L] + lightLevels[LDR_PATH_R]) / 2;
+
+    // Replace A and B with your calibrated constants
+    float A = 1000.0; // Example after calibration
+    float B = -1.2;   // Example after calibration
+
+    float lux = A * pow(adcValue, B);
+
+    if (lux < 0) lux = 0;
+    return lux;
+}
+
+int LightSensor::monitorCompartment(bool compartment_start) {
+    if (compartment_start) {
+
+        if (!isCompartmentMonitoringActive) {
+            isCompartmentMonitoringActive = true;
+            Serial.println("=== Compartment monitoring STARTED ===");
+            lastCompartmentState = 255;
+        }
+
+        update();
+        int avgLight = (lightLevels[LDR_COMP_1] + lightLevels[LDR_COMP_2]) / 2;
+        
+        int currentState;
+        if (avgLight > COMPARTMENT_LIGHT_THRESHOLD) {
+            currentState = 0;
+        } else {
+            currentState = 255;
+        }
+        
+        // Log state changes
+        if (currentState != lastCompartmentState) {
+            lastCompartmentState = currentState;
+            Serial.println("┌─────────────────────────");
+            Serial.print("│ Compartment: ");
+            Serial.println(currentState == 0 ? "OPEN" : "CLOSED");
+            Serial.print("│ Light Level: ");
+            Serial.println(avgLight);
+            Serial.println("└─────────────────────────");
+        }
+        
+        return currentState;
+    } 
+    else {
+        // Stop monitoring
+        if (isCompartmentMonitoringActive) {
+            isCompartmentMonitoringActive = false;
+            Serial.println("=== Compartment monitoring STOPPED ===");
+        }
+        lastCompartmentState = 255; // Default to closed when stopped
+        return 255;
+    }
+}

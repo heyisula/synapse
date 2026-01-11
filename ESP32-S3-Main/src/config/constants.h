@@ -42,4 +42,6 @@
 #define ERROR_FREQ     8000
 #define EMERGENCY_FREQ 2600
 
+#define ALPHA 0.96f  // Start here, tune between 0.96-0.98
+
 #endif
