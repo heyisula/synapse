@@ -24,7 +24,6 @@ void Buzzer::setVolume(int vol) {
     volume = constrain(vol, 0, 100);
 }
 
-// Push-pull driver with volume control
 void Buzzer::drive(uint16_t cycles, uint16_t freq) {
     uint32_t halfPeriod = 500000 / freq; // microseconds
     uint16_t effectiveCycles = map(volume, 0, 100, 0, cycles);
@@ -81,4 +80,67 @@ void Buzzer::emergencyAlarm() {
 void Buzzer::stop() {
     digitalWrite(buzzer1Pin, LOW);
     digitalWrite(buzzer2Pin, LOW);
+}
+
+void Buzzer::controlFromFirebase(bool buzzer01ring, bool buzzer02ring, int buzzersound) {
+    if (buzzersound != lastVolume) {
+        lastVolume = buzzersound;
+        setVolume(buzzersound);
+        
+        Serial.print("Buzzer volume set to: ");
+        Serial.print(buzzersound);
+        Serial.println("%");
+    }
+    
+    if (buzzer01ring) {
+        if (!buzzer1Active) {
+            // Buzzer 1 turned ON
+            buzzer1Active = true;
+            Serial.println("┌─────────────────────────");
+            Serial.println("│ BUZZER 1: ON");
+            Serial.print("│ Volume: ");
+            Serial.print(volume);
+            Serial.println("%");
+            Serial.println("└─────────────────────────");
+        }
+        singleBeep();
+        
+    } else {
+        if (buzzer1Active) {
+            // Buzzer 1 turned OFF
+            buzzer1Active = false;
+            Serial.println("┌─────────────────────────");
+            Serial.println("│ BUZZER 1: OFF");
+            Serial.println("└─────────────────────────");
+        }
+    }
+    
+    if (buzzer02ring) {
+        if (!buzzer2Active) {
+            // Buzzer 2 turned ON
+            buzzer2Active = true;
+            Serial.println("┌─────────────────────────");
+            Serial.println("│ BUZZER 2: ON");
+            Serial.print("│ Volume: ");
+            Serial.print(volume);
+            Serial.println("%");
+            Serial.println("└─────────────────────────");
+        }
+        
+        emergencyAlarm();
+        
+    } else {
+        if (buzzer2Active) {
+            // Buzzer 2 turned OFF
+            buzzer2Active = false;
+            Serial.println("┌─────────────────────────");
+            Serial.println("│ BUZZER 2: OFF");
+            Serial.println("└─────────────────────────");
+        }
+    }
+    
+    // If both buzzers are OFF, stop all output
+    if (!buzzer01ring && !buzzer02ring) {
+        stop();
+    }
 }

@@ -18,6 +18,11 @@ private:
 
     void drive(uint16_t cycles, uint16_t freq);
 
+    // Buzzer state tracking
+    bool buzzer1Active;
+    bool buzzer2Active;
+    int lastVolume;
+
 public:
     Buzzer();
     void begin();
@@ -29,6 +34,8 @@ public:
     void tripleBeep();
     void emergencyAlarm();
     void stop();
+
+    void controlFromFirebase(bool buzzer01ring, bool buzzer02ring, int buzzersound);
 };
 
 #endif

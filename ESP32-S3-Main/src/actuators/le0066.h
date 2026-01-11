@@ -14,12 +14,12 @@ public:
     LEDArray();
     void begin();
 
-    void setBrightness(uint8_t left, uint8_t right); // 0-255 PWM
-    void setBothBrightness(uint8_t brightness);               // convenience
+    void setBrightness(uint8_t left, uint8_t right);
+    void setBothBrightness(uint8_t brightness);
     void update();
     void setStatus(bool left, bool right);
 
-
+    void controlFromFirebase(int lightadj_left, int lightadj_right);
 };
 
 #endif

@@ -55,4 +55,7 @@
 // Temperature/Humidity Sensor
 #define AM2302_DATA 19
 
+//Battery Monitor
+#define BATTERY_ADC 46
+
 #endif

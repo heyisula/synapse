@@ -20,12 +20,25 @@ private:
     float minValid[US_COUNT];
     float maxValid[US_COUNT];
 
+    bool isUltrasonicMonitoringActive;
+    int lastCenterDistance;
+    int lastLeftDistance;
+    int lastRearDistance;
+    int lastRightDistance;
+    
+
 
 public:
     UltrasonicManager();
     void begin();
     void update();
     float getDistance(UltrasonicPosition pos);
+
+    bool monitorUltrasonic(bool ultrasonic_start, 
+                          int& center, 
+                          int& left, 
+                          int& rear, 
+                          int& right);
 };
 
 #endif
