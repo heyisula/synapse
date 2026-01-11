@@ -10,7 +10,7 @@ AssistantMode::AssistantMode(ColorSensor* cs, UltrasonicManager* us,
     display = disp;
     buzzer = buzz;
     
-    currentState = STATE_IDLE;
+    currentState = ASSISTANT_STATE_IDLE;
     identifiedStaff = STAFF_UNKNOWN;
     humanDetected = false;
     isSystemActive = false;
@@ -55,7 +55,7 @@ void AssistantMode::setFollowingMode(bool enable) {
     if (enable && !isFollowingMode) {
         isFollowingMode = true;
         isSystemActive = true;
-        currentState = STATE_WAITING_CARD;
+        currentState = ASSISTANT_STATE_WAITING_CARD;
         stateStartTime = millis();
         
         Serial.println("\n╔════════════════════════════════════════╗");
@@ -74,7 +74,7 @@ void AssistantMode::setFollowingMode(bool enable) {
     } else if (!enable && isFollowingMode) {
         isFollowingMode = false;
         isSystemActive = false;
-        currentState = STATE_IDLE;
+        currentState = ASSISTANT_STATE_IDLE;
         stopRobot();
         
         Serial.println("\n╔════════════════════════════════════════╗");
@@ -102,54 +102,54 @@ void AssistantMode::update() {
     }
     
     switch (currentState) {
-        case STATE_WAITING_CARD:
+        case ASSISTANT_STATE_WAITING_CARD:
             waitForCardPunch();
             break;
             
-        case STATE_IDENTIFYING:
+        case ASSISTANT_STATE_IDENTIFYING:
             identifyStaff();
             break;
             
-        case STATE_IDENTIFIED_DELAY:
+        case ASSISTANT_STATE_IDENTIFIED_DELAY:
             if (millis() - stateStartTime > 2000) {
-                currentState = STATE_WAITING_DISTANCE;
+                currentState = ASSISTANT_STATE_WAITING_DISTANCE;
                 stateStartTime = millis();
             }
             break;
             
-        case STATE_WAITING_DISTANCE:
+        case ASSISTANT_STATE_WAITING_DISTANCE:
             waitForProperDistance();
             break;
             
-        case STATE_DISTANCE_CONFIRM_DELAY:
+        case ASSISTANT_STATE_DISTANCE_CONFIRM_DELAY:
             if (millis() - stateStartTime > 2000) {
-                currentState = STATE_FOLLOWING;
+                currentState = ASSISTANT_STATE_FOLLOWING;
                 stateStartTime = millis();
                 humanDetected = true;
             }
             break;
             
-        case STATE_FOLLOWING:
+        case ASSISTANT_STATE_FOLLOWING:
             followHuman();
             break;
             
-        case STATE_TRACKING_LOST:
+        case ASSISTANT_STATE_TRACKING_LOST:
             handleTrackingLost();
             break;
             
-        case STATE_TRACKING_LOST_DELAY:
+        case ASSISTANT_STATE_TRACKING_LOST_DELAY:
             if (millis() - stateStartTime > 3000) {
-                currentState = STATE_WAITING_DISTANCE;
+                currentState = ASSISTANT_STATE_WAITING_DISTANCE;
                 stateStartTime = millis();
             }
             break;
             
-        case STATE_ERROR:
+        case ASSISTANT_STATE_ERROR:
             stopRobot();
             break;
             
         default:
-            currentState = STATE_IDLE;
+            currentState = ASSISTANT_STATE_IDLE;
             break;
     }
 }
@@ -179,7 +179,7 @@ void AssistantMode::waitForCardPunch() {
     String detectedColor = colorSensor->monitorColor(true);
     
     if (detectedColor != "UNKNOWN") {
-        currentState = STATE_IDENTIFYING;
+        currentState = ASSISTANT_STATE_IDENTIFYING;
         stateStartTime = millis();
         buzzer->playTone(TONE_CONFIRM);
         Serial.println("Card detected! Moving to identification...");
@@ -216,14 +216,14 @@ void AssistantMode::identifyStaff() {
         
         buzzer->doubleBeep();
         // Delay handled by state machine
-        currentState = STATE_IDENTIFIED_DELAY;
+        currentState = ASSISTANT_STATE_IDENTIFIED_DELAY;
         stateStartTime = millis();
         
     } else {
         Serial.println("Unknown card detected, waiting...");
         
         if (millis() - stateStartTime > CARD_IDENTIFICATION_TIMEOUT) {
-            currentState = STATE_WAITING_CARD;
+            currentState = ASSISTANT_STATE_WAITING_CARD;
             display->displayError("Unknown Card!");
             buzzer->playTone(TONE_ERROR);
             delay(2000);
@@ -269,7 +269,7 @@ void AssistantMode::waitForProperDistance() {
             
             buzzer->singleBeep();
             
-            currentState = STATE_DISTANCE_CONFIRM_DELAY;
+            currentState = ASSISTANT_STATE_DISTANCE_CONFIRM_DELAY;
             stateStartTime = millis();
             humanDetected = true;
             
@@ -287,7 +287,7 @@ void AssistantMode::followHuman() {
         centerDistance, leftDistance, rearDistance, rightDistance);
     
     if (!ultrasonicActive) {
-        currentState = STATE_ERROR;
+        currentState = ASSISTANT_STATE_ERROR;
         display->displayError("Sensor Error!");
         return;
     }
@@ -296,7 +296,7 @@ void AssistantMode::followHuman() {
         if (trackingLostTime == 0) {
             trackingLostTime = millis();
         } else if (millis() - trackingLostTime > TRACKING_LOST_TIMEOUT) {
-            currentState = STATE_TRACKING_LOST;
+            currentState = ASSISTANT_STATE_TRACKING_LOST;
             trackingLostTime = 0;
             return;
         }
@@ -343,7 +343,7 @@ void AssistantMode::handleTrackingLost() {
     stopRobot();
     buzzer->tripleBeep();
     
-    currentState = STATE_TRACKING_LOST_DELAY;
+    currentState = ASSISTANT_STATE_TRACKING_LOST_DELAY;
     stateStartTime = millis();
 }
 

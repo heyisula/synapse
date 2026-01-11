@@ -59,7 +59,7 @@ bool FirebaseManager::sendData(const FirebaseTxData& d) {
     // Compartment - SEND ONLY
     json.set("compartment", d.compartment);
 
-    if (!Firebase.updateNode(fbdo, "/", json)) {
+    if (!Firebase.updateNode(fbdo, "/telemetry", json)) {
         Serial.print("Firebase TX failed: ");
         Serial.println(fbdo.errorReason());
         return false;
@@ -76,7 +76,7 @@ bool FirebaseManager::receiveData(FirebaseRxData& d) {
     if (millis() - lastRX < 1000) return true; // Keep old data if less than 1s passed
     lastRX = millis();
 
-    if (!Firebase.getJSON(fbdo, "/")) {
+    if (!Firebase.getJSON(fbdo, "/controls")) {
         Serial.print("Firebase RX failed: ");
         Serial.println(fbdo.errorReason());
         return false;

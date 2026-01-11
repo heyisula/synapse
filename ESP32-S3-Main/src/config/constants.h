@@ -31,6 +31,6 @@
 #define SPO2_MIN 95                  // %
 #define SPO2_MAX 100                 // %
 
-#define ALPHA 0.96f  // Start here, tune between 0.96-0.98
+#define MPU_ALPHA 0.96f  // Start here, tune between 0.96-0.98
 
 #endif

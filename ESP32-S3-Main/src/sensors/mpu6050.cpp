@@ -147,8 +147,8 @@ void MotionTracker::update() {
     pitch += gyroY * dt;
     roll += gyroX * dt;
 
-    pitch = ALPHA * pitch + (1.0f - ALPHA) * pitchAcc;
-    roll = ALPHA * roll + (1.0f - ALPHA) * rollAcc;
+    pitch = MPU_ALPHA * pitch + (1.0f - MPU_ALPHA) * pitchAcc;
+    roll = MPU_ALPHA * roll + (1.0f - MPU_ALPHA) * rollAcc;
 
     forwardAccel = accelX - sin(roll * DEG_TO_RAD);
     sideAccel = accelY - sin(pitch * DEG_TO_RAD);

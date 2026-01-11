@@ -104,3 +104,23 @@ void Buzzer::controlFromFirebase(bool buzzer01ring, bool buzzer02ring, int buzze
         buzzer2Active = false;
     }
 }
+
+void Buzzer::singleBeep() {
+    playTone(TONE_CONFIRM);
+}
+
+void Buzzer::doubleBeep() {
+    patternActive = true;
+    patternStartTime = millis();
+    currentStep = 0;
+    totalSteps = 3; // On, Off, On
+    nextStepTime = millis();
+}
+
+void Buzzer::tripleBeep() {
+    patternActive = true;
+    patternStartTime = millis();
+    currentStep = 0;
+    totalSteps = 5; // On, Off, On, Off, On
+    nextStepTime = millis();
+}

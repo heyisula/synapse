@@ -60,10 +60,9 @@ void HeartRateSensor::update() {
     if (currentTime - lastReadTime < 50) return;
     lastReadTime = currentTime;
     
-    // Check if new data is available
-    while (particleSensor.available() == false) {
-        particleSensor.check();
-    }
+    // Check if new data is available without blocking
+    particleSensor.check();
+    if (particleSensor.available() == false) return;
     
     // Read IR and Red values
     long irValue = particleSensor.getIR();
