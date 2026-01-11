@@ -113,6 +113,14 @@ void loop() {
     autoLighting->update();
     buzzer.update();
     
+    // UART Acknowledgment Check
+    MotorCommand ackCmd;
+    uint8_t ackSpeed;
+    if (uart.receiveAcknowledgment(ackCmd, ackSpeed)) {
+        // Optional: Serial.println("ACK: Command received by Motor Controller");
+        // We could also trigger a subtle buzzer tone or LED blink here
+    }
+    
     // Firebase Comm
     static unsigned long lastFirebaseUpdate = 0;
     if (millis() - lastFirebaseUpdate >= 2000) {
