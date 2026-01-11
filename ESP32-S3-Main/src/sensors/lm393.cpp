@@ -40,7 +40,7 @@ int LightSensor::getLightLevel(LDRPosition pos) {
 int LightSensor::getPathDarkness() {
     int avgLight = (lightLevels[LDR_PATH_L] + lightLevels[LDR_PATH_R]) / 2;
     int darkness = map(avgLight, 0, 4095, 255, 0); // ESP32 ADC: 0-4095
-    return constrain(darkness, 0, 255);
+    return constrain(darkness, 0, 255); //255 Dark, 0 Bright
 }
 
 bool LightSensor::isCompartmentOpen() {

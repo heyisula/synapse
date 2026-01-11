@@ -39,6 +39,7 @@
 //Path Visibility Threshold
 #define PATH_LIGHT_THRESHOLD 3000        // ADC value
 
+#define AM2303_READ_INTERVAL 2000UL
 
 #define STATIONARY_GYRO_THRESHOLD 1.0f   // deg/s, ignore tiny gyro noise
 #define STATIONARY_TILT_THRESHOLD 2.0f   // degrees, small tilt allowed

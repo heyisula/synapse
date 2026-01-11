@@ -1,100 +1,53 @@
 #include <Arduino.h>
-
-#include "modes/obstacle_avoidance.h"
-#include "sensors/hcsr04.h"
-#include "sensors/mpu6050.h"
-#include "communication/uart.h"
+#include "sensors/max30102.h"
+#include "sensors/am2303.h"
+#include "sensors/lm393.h"
 #include "actuators/ermc1604syg.h"
 #include "actuators/sfm27.h"
+#include "modes/monitoring.h"
 
-// --------------------------------------------------
-// Global subsystem instances
-// --------------------------------------------------
-UltrasonicManager ultrasonicManager;
-MotionTracker motionTracker;
-UARTProtocol uartProtocol;
+// Create sensor and actuator objects
+HeartRateSensor hrSensor;
+Environmental envSensor;
+LightSensor lightSensor;
 Display display;
 Buzzer buzzer;
 
-// --------------------------------------------------
-// Obstacle Avoidance controller
-// --------------------------------------------------
-ObstacleAvoidance obstacleAvoidance(
-    &ultrasonicManager,
-    &motionTracker,
-    &uartProtocol,
-    &display,
-    &buzzer
-);
+// Monitoring system instance
+MonitoringSystem monitoring(&hrSensor, &envSensor, &lightSensor, &display, &buzzer);
 
-// --------------------------------------------------
-// Setup
-// --------------------------------------------------
 void setup() {
     Serial.begin(115200);
-    delay(1000);
+    while (!Serial) ; // wait for Serial monitor
 
-    Serial.println();
-    Serial.println("======================================");
-    Serial.println(" Obstacle Avoidance - SYSTEM TEST ");
-    Serial.println("======================================");
+    Serial.println("=== Monitoring System Test ===");
 
-    obstacleAvoidance.begin();
+    // Initialize system
+    if (!monitoring.initialize()) {
+        Serial.println("Initialization failed. Check sensors.");
+        while (1) delay(1000);
+    }
 
-    Serial.println("Initialization complete.");
+    // Calibrate sensors
+    monitoring.calibrateSensors();
+
+    // Start continuous monitoring
+    monitoring.startMonitoring();
 }
 
-// --------------------------------------------------
-// Loop
-// --------------------------------------------------
 void loop() {
-    obstacleAvoidance.update();
+    // Update monitoring system
+    monitoring.update();
 
-    // ----------------------------------------------
-    // Read back telemetry from ObstacleAvoidance
-    // ----------------------------------------------
-    ObstacleAvoidance::SensorData data = obstacleAvoidance.getSensorData();
+    // Optional: debug output via Serial
+    MonitoringData data = monitoring.getCurrentData();
 
-    Serial.print("[STATUS=");
-    Serial.print(data.status);
-    Serial.print("] ");
+    Serial.print("HR: "); Serial.print(data.heartRate);
+    Serial.print(" bpm | SpO2: "); Serial.print(data.spO2);
+    Serial.print("% | Temp: "); Serial.print(data.bodyTemp);
+    Serial.print("°C | Ambient: "); Serial.print(data.ambientTemp);
+    Serial.print("°C | Humidity: "); Serial.print(data.humidity);
+    Serial.print("% | Light: "); Serial.println(data.lightLevel);
 
-    Serial.print("SPD=");
-    Serial.print(data.speed);
-    Serial.print("% | ");
-
-    Serial.print("F:");
-    Serial.print(data.frontDist, 1);
-    Serial.print("cm ");
-
-    Serial.print("B:");
-    Serial.print(data.rearDist, 1);
-    Serial.print("cm ");
-
-    Serial.print("L:");
-    Serial.print(data.leftDist, 1);
-    Serial.print("cm ");
-
-    Serial.print("R:");
-    Serial.print(data.rightDist, 1);
-    Serial.print("cm | ");
-
-    Serial.print("Pitch:");
-    Serial.print(data.pitch, 1);
-    Serial.print(" ");
-
-    Serial.print("Roll:");
-    Serial.print(data.roll, 1);
-    Serial.print(" | ");
-
-    Serial.print("AccX:");
-    Serial.print(data.forwardAccel, 2);
-    Serial.print(" ");
-
-    Serial.print("AccY:");
-    Serial.print(data.sideAccel, 2);
-
-    Serial.println();
-
-    delay(250);
+    delay(1000);
 }

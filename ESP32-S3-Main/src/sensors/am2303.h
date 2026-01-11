@@ -14,7 +14,7 @@ private:
     unsigned long lastReadTime;
 
 public:
-    Environmental(uint8_t pin);
+    Environmental();
 
     bool begin();
     void update();

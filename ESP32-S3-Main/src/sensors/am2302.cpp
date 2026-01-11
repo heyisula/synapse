@@ -1,12 +1,11 @@
 #include "sensors/am2303.h"
-#include "../config/pins.h"
-#include "../config/thresholds.h"
-#include "../config/constants.h"
+#include "config/pins.h"
+#include "config/thresholds.h"
+#include "config/constants.h"
 
-#define AM2303_READ_INTERVAL 2000UL
 
-Environmental::Environmental(uint8_t pin)
-    : sensor(pin),
+Environmental::Environmental()
+    : sensor(AM2302_DATA),
       temperature(NAN),
       humidity(NAN),
       lastReadTime(0)
