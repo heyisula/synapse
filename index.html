@@ -466,10 +466,10 @@
             // Compartment status
             if (data.compartment !== undefined) {
                 let status, statusClass;
-                if (data.compartment >= 0 && data.compartment <= 15) {
+                if (data.compartment >= 0) {
                     status = 'Open';
                     statusClass = 'status-open';
-                } else if (data.compartment >= 205 && data.compartment <= 225) {
+                } else if (data.compartment >= 200) {
                     status = 'Closed';
                     statusClass = 'status-closed';
                 } else {
@@ -512,6 +512,8 @@
                 document.getElementById('light_right_slider').value = data.lightadj_right;
                 console.log('Light Right:', data.lightadj_right);
             }
+
+            // Light level
             if (data.lightlevel !== undefined) {
                 document.getElementById('lightlevel').textContent = data.lightlevel + ' lux';
                 console.log('Light Level:', data.lightlevel);
