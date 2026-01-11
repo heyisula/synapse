@@ -450,45 +450,61 @@
             }
             
             // Colour
-            if (data.colour !== undefined) {
-                const colourText = data.colour || 'No Color';
-                document.getElementById('colour').textContent = colourText;
-                if (data.colour && data.colour !== 'No Color') {
-                    document.getElementById('color_display').style.background = data.colour;
-                    document.getElementById('colour').style.color = 'white';
-                } else {
-                    document.getElementById('color_display').style.background = '#ddd';
-                    document.getElementById('colour').style.color = '#333';
+            if (data.colour_start) {
+                if (data.colour !== undefined) {
+                    const colourText = data.colour || 'No Color';
+                    document.getElementById('colour').textContent = colourText;
+                    if (data.colour && data.colour !== 'No Color') {
+                        document.getElementById('color_display').style.background = data.colour;
+                        document.getElementById('colour').style.color = 'white';
+                    } else {
+                        document.getElementById('color_display').style.background = '#ddd';
+                        document.getElementById('colour').style.color = '#333';
+                    }
+                    console.log('Colour:', data.colour);
                 }
-                console.log('Colour:', data.colour);
+            } else {
+                document.getElementById('colour').textContent = 'No Color';
+                document.getElementById('color_display').style.background = '#ddd';
+                document.getElementById('colour').style.color = '#333';
             }
             
             // Compartment status
-            if (data.compartment !== undefined) {
-                let status, statusClass;
-                if (data.compartment >= 0) {
-                    status = 'Open';
-                    statusClass = 'status-open';
-                } else if (data.compartment >= 200) {
-                    status = 'Closed';
-                    statusClass = 'status-closed';
-                } else {
-                    status = 'Unknown';
-                    statusClass = 'status-closed';
+            if (data.compartment_start) {
+                if (data.compartment !== undefined) {
+                    let status, statusClass;
+                    if (data.compartment >= 0 && data.compartment < 200) {
+                        status = 'Open';
+                        statusClass = 'status-open';
+                    } else if (data.compartment >= 200) {
+                        status = 'Closed';
+                        statusClass = 'status-closed';
+                    } else {
+                        status = 'Unknown';
+                        statusClass = 'status-closed';
+                    }
+                    document.getElementById('compartment_status').innerHTML = 
+                        status + '<span class="status-indicator ' + statusClass + '"></span>';
+                    console.log('Compartment:', data.compartment, '→', status);
                 }
+            } else {
                 document.getElementById('compartment_status').innerHTML = 
-                    status + '<span class="status-indicator ' + statusClass + '"></span>';
-                console.log('Compartment:', data.compartment, '→', status);
+                    'Closed<span class="status-indicator status-closed"></span>';
             }
             
             // Health monitoring
-            if (data.hr !== undefined) {
-                document.getElementById('hr').textContent = data.hr + ' bpm';
-                console.log('Heart Rate:', data.hr);
-            }
-            if (data.sp02 !== undefined) {
-                document.getElementById('sp02').textContent = data.sp02 + '%';
-                console.log('SpO2:', data.sp02);
+            if (data.heartrate_start) {
+                if (data.hr !== undefined) {
+                    document.getElementById('hr').textContent = data.hr + ' bpm';
+                    console.log('Heart Rate:', data.hr);
+                }
+                if (data.sp02 !== undefined) {
+                    document.getElementById('sp02').textContent = data.sp02 + '%';
+                    console.log('SpO2:', data.sp02);
+                }
+            } else {
+                document.getElementById('hr').textContent = '0 bpm';
+                document.getElementById('sp02').textContent = '0%';
             }
             
             // Environmental
@@ -525,21 +541,28 @@
             }
             
             // Ultrasonic sensors
-            if (data.ultrasonic_left !== undefined) {
-                document.getElementById('ultrasonic_left').textContent = data.ultrasonic_left + ' cm';
-                console.log('Ultrasonic Left:', data.ultrasonic_left);
-            }
-            if (data.ultrasonic_right !== undefined) {
-                document.getElementById('ultrasonic_right').textContent = data.ultrasonic_right + ' cm';
-                console.log('Ultrasonic Right:', data.ultrasonic_right);
-            }
-            if (data.ultrasonic_center !== undefined) {
-                document.getElementById('ultrasonic_center').textContent = data.ultrasonic_center + ' cm';
-                console.log('Ultrasonic Center:', data.ultrasonic_center);
-            }
-            if (data.ultrasonic_rear !== undefined) {
-                document.getElementById('ultrasonic_rear').textContent = data.ultrasonic_rear + ' cm';
-                console.log('Ultrasonic Rear:', data.ultrasonic_rear);
+            if (data.ultrasonic_start) {
+                if (data.ultrasonic_left !== undefined) {
+                    document.getElementById('ultrasonic_left').textContent = data.ultrasonic_left + ' cm';
+                    console.log('Ultrasonic Left:', data.ultrasonic_left);
+                }
+                if (data.ultrasonic_right !== undefined) {
+                    document.getElementById('ultrasonic_right').textContent = data.ultrasonic_right + ' cm';
+                    console.log('Ultrasonic Right:', data.ultrasonic_right);
+                }
+                if (data.ultrasonic_center !== undefined) {
+                    document.getElementById('ultrasonic_center').textContent = data.ultrasonic_center + ' cm';
+                    console.log('Ultrasonic Center:', data.ultrasonic_center);
+                }
+                if (data.ultrasonic_rear !== undefined) {
+                    document.getElementById('ultrasonic_rear').textContent = data.ultrasonic_rear + ' cm';
+                    console.log('Ultrasonic Rear:', data.ultrasonic_rear);
+                }
+            } else {
+                document.getElementById('ultrasonic_left').textContent = '0 cm';
+                document.getElementById('ultrasonic_right').textContent = '0 cm';
+                document.getElementById('ultrasonic_center').textContent = '0 cm';
+                document.getElementById('ultrasonic_rear').textContent = '0 cm';
             }
             
             // Start/Stop butt0ons state
