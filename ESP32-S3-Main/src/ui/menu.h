@@ -2,24 +2,30 @@
 #define MENU_H
 
 #include <Arduino.h>
+
 #include "actuators/ermc1604syg.h"
-#include "actuators/sfm27.h"
+#include "actuators/sfm27.h" 
 #include "ky040.h"
 
+#include "modes/automatic_lighting.h"
+#include "modes/assistant_mode.h"
+#include "modes/line_following.h"
+#include "modes/monitoring.h"
+#include "modes/obstacle_avoidance.h"
+
 enum MenuState {
-    ASSISTANT_MODE_MENU,
-    LINE_FOLLOWING_MENU,
+    MAIN_MENU,
+    ASSISTANT_MODE,
+    LINE_FOLLOWING,
     MONITORING_MENU,
-    OBSTACLE_AVOIDANCE_MENU,
-    SYSTEM_INFO_MENU,
+    OBSTACLE_AVOIDANCE_MODE,
+    SYSTEM_INFO,
+    AUTOMATIC_LIGHTING
 };
 
-struct RobotSettings {
-    float followingDistance;  // meters (0.5 - 3.0)
-    int speed;                // percentage (20-100)
-    int brightness;           // percentage (0-100)
-    int volume;               // 0-10
+struct SystemInfo {
     int batteryLevel;
+    int currentSpeed;
     bool wifiConnected;
 };
 
@@ -29,66 +35,32 @@ private:
     Buzzer* buzzer;
     MenuState currentMenu;
     MenuState previousMenu;
+    SystemInfo settings;
 
     int currentSelection;
     int maxMenuItems;
-    RobotSettings settings;
     bool inMenu;
-    bool adjustingMode;
-    int tempEncoderValue;
     
-    // Menu display functions
     void displayMainMenuItems();
-    void displayFollowModeMenu();
-    void displayNavigationMenu();
-    void displayMonitorMenu();
-    void displaySettingsMenu();
-    void displaySystemInfoMenu();
-    
-    // Menu selection handlers
-    void handleMainMenuSelection();
-    void handleFollowModeSelection();
-    void handleNavigationSelection();
-    void handleMonitorSelection();
-    void handleSettingsSelection();
-    
-    // Value adjustment functions
-    void startAdjustingDistance();
-    void startAdjustingSpeed();
-    void startAdjustingBrightness();
-    void startAdjustingVolume();
-    void updateAdjustingDisplay();
+    void displayAssistantMode();
+    void displayLineFollowing();
+    void displayMonitoring();
+    void displayObstacleAvoidance();
+    void displaySystemInfo();
+    void displayAutomaticLighting();
     
 public:
     MenuSystem(Display* disp, Buzzer* bz);
     void begin();
     void enter();
     void exit();
-    void navigate(int direction);
     void select();
-    void adjustValue(int encoderChange);
     bool isActive();
-    bool isAdjusting();
     void updateDisplay();
     
-    // Settings getters
-    float getFollowDistance();
-    int getRobotSpeed();
-    int getDisplayBrightness();
-    int getBuzzerVolume();
-    bool getAutoMode();
-    void setBatteryLevel(int level);
-    void setWifiStatus(bool connected);
-    
-    // Command getters for main loop
-    bool shouldStartFollowing();
-    bool shouldStartNavigation();
-    bool shouldStartMonitoring();
-    
-    // Command flags (cleared after reading)
-    bool startFollowingFlag;
-    bool startNavigationFlag;
-    bool startMonitoringFlag;
+    void getBatteryLevel(int level);
+    void getWifiStatus(bool connected);
+    void getCurrentSpeed(int speed);
 
 };
 
