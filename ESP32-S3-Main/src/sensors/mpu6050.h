@@ -52,6 +52,10 @@ public:
 
     // Acceleration magnitude (impact detection)
     float getAccelMagnitude();
+
+    int getAccelerationInt();
+    int getAngularVelocityInt();
+    void getMotionData(int& acceleration, int& angular);
 };
 
 #endif

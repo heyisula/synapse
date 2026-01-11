@@ -20,6 +20,10 @@ public:
     void update();
     float getTemperature();
     float getHumidity();
+
+    int getTemperatureInt();
+    int getHumidityInt();
+    void getEnvironmentData(int& temp, int& humidity);
 };
 
 #endif

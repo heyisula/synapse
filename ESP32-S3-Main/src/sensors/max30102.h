@@ -38,6 +38,10 @@ private:
     long lastIRValue;
     bool checkForBeat(long irValue);
 
+    // Heart rate monitoring state
+    bool isHeartRateMonitoringActive;
+    int lastHeartRate;
+    int lastSpO2;
     
     //static constexpr uint8_t MAX30102_ADDR = 0x57;
     
@@ -51,6 +55,8 @@ public:
     float getTemperatureF();
     bool isFingerDetected();
     bool isValid();
+
+    bool monitorHeartRate(bool heartrate_start, int& hr, int& sp02);
 };
 
 #endif

@@ -188,3 +188,41 @@ float MotionTracker::getAccelMagnitude() {
                 accelY * accelY +
                 accelZ * accelZ);
 }
+
+int MotionTracker::getAccelerationInt() {
+    update();
+    
+    float accelMagnitude = getAccelMagnitude();
+    float accelMS2 = accelMagnitude * 9.81f;
+    int acceleration = (int)round(accelMS2 * 100.0f);
+    
+    return acceleration;
+}
+
+int MotionTracker::getAngularVelocityInt() {
+    update();
+    
+    float angularVelocity = gyroX;
+    int angular = (int)round(angularVelocity);
+    
+    return angular;
+}
+
+void MotionTracker::getMotionData(int& acceleration, int& angular) {
+    update();
+    
+    float accelMagnitude = getAccelMagnitude();
+    float accelMS2 = accelMagnitude * 9.81f;
+    acceleration = (int)round(accelMS2 * 100.0f);
+    
+    float angularVelocity = gyroX;
+    angular = (int)round(angularVelocity);
+    
+    Serial.print("Motion - Accel: ");
+    Serial.print(acceleration);
+    Serial.print(" (");
+    Serial.print(accelMS2, 2);
+    Serial.print(" m/s²), Angular: ");
+    Serial.print(angular);
+    Serial.println("°/s");
+}

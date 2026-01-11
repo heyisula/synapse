@@ -217,3 +217,67 @@ bool HeartRateSensor::isValid() {
            spO2 >= SPO2_MIN && 
            spO2 <= SPO2_MAX;
 }
+
+bool HeartRateSensor::monitorHeartRate(bool heartrate_start, int& hr, int& sp02) {
+    if (heartrate_start) {
+
+        if (!isHeartRateMonitoringActive) {
+            isHeartRateMonitoringActive = true;
+            Serial.println("=== Heart Rate monitoring STARTED ===");
+            Serial.println("Place your finger on the sensor...");
+            lastHeartRate = 0;
+            lastSpO2 = 0;
+        }
+        
+        update();
+        
+        if (!fingerDetected) {
+            Serial.println("⚠ No finger detected - place finger on sensor");
+            hr = 0;
+            sp02 = 0;
+            return false;
+        }
+        
+        int currentHR = getHeartRate();
+        int currentSpO2 = getSpO2();
+        
+        if (isValid()) {
+            hr = currentHR;
+            sp02 = currentSpO2;
+            
+            if (currentHR != lastHeartRate || currentSpO2 != lastSpO2) {
+                lastHeartRate = currentHR;
+                lastSpO2 = currentSpO2;
+                
+                Serial.println("┌─────────────────────────");
+                Serial.print("│ Heart Rate: ");
+                Serial.print(hr);
+                Serial.println(" BPM");
+                Serial.print("│ SpO2: ");
+                Serial.print(sp02);
+                Serial.println("%");
+                Serial.println("└─────────────────────────");
+            }
+            
+            return true;
+        } else {
+            hr = 0;
+            sp02 = 0;
+            return false;
+        }
+        
+    } else {
+
+        if (isHeartRateMonitoringActive) {
+            isHeartRateMonitoringActive = false;
+            Serial.println("=== Heart Rate monitoring STOPPED ===");
+        }
+        
+        hr = 0;
+        sp02 = 0;
+        lastHeartRate = 0;
+        lastSpO2 = 0;
+        
+        return false;
+    }
+}

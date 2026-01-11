@@ -1,4 +1,4 @@
-#include "sensors/am2303.h"
+#include "sensors/am2302.h"
 #include "config/pins.h"
 #include "config/thresholds.h"
 #include "config/constants.h"
@@ -56,4 +56,50 @@ float Environmental::getTemperature() {
 
 float Environmental::getHumidity() {
     return humidity;
+}
+
+int Environmental::getTemperatureInt() {
+    update();
+    
+    if (isnan(temperature)) {
+        Serial.println("Warning: Temperature reading invalid, returning 0");
+        return 0;
+    }
+    int temp = (int)round(temperature);
+    return temp;
+}
+
+int Environmental::getHumidityInt() {
+    update();
+
+    if (isnan(humidity)) {
+        Serial.println("Warning: Humidity reading invalid, returning 0");
+        return 0;
+    }
+    int hum = (int)round(humidity);
+    
+    return hum;
+}
+
+void Environmental::getEnvironmentData(int& temp, int& humidity) {
+    update();
+    if (isnan(temperature)) {
+        temp = 0;
+        Serial.println("Warning: Temperature reading invalid");
+    } else {
+        temp = (int)round(temperature);
+    }
+
+    if (isnan(this->humidity)) {
+        humidity = 0;
+        Serial.println("Warning: Humidity reading invalid");
+    } else {
+        humidity = (int)round(this->humidity);
+    }
+    
+    Serial.print("Environment - Temp: ");
+    Serial.print(temp);
+    Serial.print("°C, Humidity: ");
+    Serial.print(humidity);
+    Serial.println("%");
 }
