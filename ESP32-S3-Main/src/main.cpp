@@ -1,53 +1,60 @@
 #include <Arduino.h>
-#include "sensors/max30102.h"
-#include "sensors/am2303.h"
-#include "sensors/lm393.h"
-#include "actuators/ermc1604syg.h"
-#include "actuators/sfm27.h"
-#include "modes/monitoring.h"
+#include "sensors/mpu6050.h"
 
-// Create sensor and actuator objects
-HeartRateSensor hrSensor;
-Environmental envSensor;
-LightSensor lightSensor;
-Display display;
-Buzzer buzzer;
-
-// Monitoring system instance
-MonitoringSystem monitoring(&hrSensor, &envSensor, &lightSensor, &display, &buzzer);
+MotionTracker motion;
 
 void setup() {
     Serial.begin(115200);
-    while (!Serial) ; // wait for Serial monitor
+    delay(1000);
 
-    Serial.println("=== Monitoring System Test ===");
+    Serial.println();
+    Serial.println("=== MotionTracker Test ===");
 
-    // Initialize system
-    if (!monitoring.initialize()) {
-        Serial.println("Initialization failed. Check sensors.");
-        while (1) delay(1000);
+    if (!motion.begin()) {
+        Serial.println("ERROR: MPU6050 not detected!");
+        while (true) {
+            delay(1000);
+        }
     }
 
-    // Calibrate sensors
-    monitoring.calibrateSensors();
+    Serial.println("MPU6050 detected successfully.");
+    delay(500);
 
-    // Start continuous monitoring
-    monitoring.startMonitoring();
+    motion.autoCalibrate();
+    Serial.println("Starting live data output...");
+    Serial.println();
 }
 
 void loop() {
-    // Update monitoring system
-    monitoring.update();
+    motion.update();
 
-    // Optional: debug output via Serial
-    MonitoringData data = monitoring.getCurrentData();
+    Serial.print("Pitch: ");
+    Serial.print(motion.getPitch(), 2);
+    Serial.print(" deg | Roll: ");
+    Serial.print(motion.getRoll(), 2);
+    Serial.print(" deg");
 
-    Serial.print("HR: "); Serial.print(data.heartRate);
-    Serial.print(" bpm | SpO2: "); Serial.print(data.spO2);
-    Serial.print("% | Temp: "); Serial.print(data.bodyTemp);
-    Serial.print("°C | Ambient: "); Serial.print(data.ambientTemp);
-    Serial.print("°C | Humidity: "); Serial.print(data.humidity);
-    Serial.print("% | Light: "); Serial.println(data.lightLevel);
+    Serial.print(" | Ax: ");
+    Serial.print(motion.getAccelX(), 3);
+    Serial.print(" g");
 
-    delay(1000);
+    Serial.print(" | Ay: ");
+    Serial.print(motion.getAccelY(), 3);
+    Serial.print(" g");
+
+    Serial.print(" | Az: ");
+    Serial.print(motion.getAccelZ(), 3);
+    Serial.print(" g");
+
+    Serial.print(" | FwdAcc: ");
+    Serial.print(motion.getForwardAcceleration(), 3);
+    Serial.print(" g");
+
+    Serial.print(" | SideAcc: ");
+    Serial.print(motion.getSideAcceleration(), 3);
+    Serial.print(" g");
+
+    Serial.println();
+
+    delay(500); // ~20 Hz output
 }
