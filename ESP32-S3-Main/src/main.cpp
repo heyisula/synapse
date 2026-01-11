@@ -117,25 +117,28 @@ void loop() {
     MotorCommand ackCmd;
     uint8_t ackSpeed;
     if (uart.receiveAcknowledgment(ackCmd, ackSpeed)) {
-        // Optional: Serial.println("ACK: Command received by Motor Controller");
-        // We could also trigger a subtle buzzer tone or LED blink here
+        Serial.println("ACK: Command received by Motor Controller");
+    }
+
+    // Check for Firebase commands every loop for low latency
+    static unsigned long lastFirebaseRx = 0;
+    if (millis() - lastFirebaseRx >= 100) { // Check every 100ms
+        lastFirebaseRx = millis();
+        FirebaseRxData rx;
+        if (firebase.receiveData(rx)) {
+            if (rx.heartrate_start) monitoring->startMonitoring();
+            else if (monitoring->isMonitoring()) monitoring->stopMonitoring();
+            assistant->setFollowingMode(rx.colour_start);
+            buzzer.controlFromFirebase(rx.buzzer01ring, rx.buzzer02ring, rx.buzzersound);
+        }
     }
     
-    // Firebase Comm
+    // Firebase Telemetry update (Keep at 2s)
     static unsigned long lastFirebaseUpdate = 0;
     if (millis() - lastFirebaseUpdate >= 2000) {
         lastFirebaseUpdate = millis();
         
-        FirebaseRxData rx;
-        if (firebase.receiveData(rx)) {
-            // Process commands from Firebase
-            if (rx.heartrate_start) monitoring->startMonitoring();
-            else if (monitoring->isMonitoring()) monitoring->stopMonitoring();
-
-            assistant->setFollowingMode(rx.colour_start); // Hypothetical mapping
-            
-            buzzer.controlFromFirebase(rx.buzzer01ring, rx.buzzer02ring, rx.buzzersound);
-        }
+        // Telemetry update
 
         // Telemetry update
         FirebaseTxData tx;
@@ -167,6 +170,17 @@ void loop() {
 
     // Mode Execution Logic based on Menu Selection
     MenuState currentState = menu->getCurrentState();
+
+    // COMMUNICATION FAILSAFE: If connection to motor board is lost, pause movement modes
+    if (currentState != MAIN_MENU && currentState != SYSTEM_INFO && !uart.isConnected()) {
+        static unsigned long lastCommWarning = 0;
+        if (millis() - lastCommWarning > 5000) {
+            Serial.println("⚠ WARNING: Communication with Motor Board LOST!");
+            display.displayError("COMM LINK LOST");
+            lastCommWarning = millis();
+        }
+        return; // Don't execute movement modes if disconnected
+    }
 
     switch (currentState) {
         case MAIN_MENU:
