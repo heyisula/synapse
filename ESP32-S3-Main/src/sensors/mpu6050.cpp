@@ -23,9 +23,11 @@ bool MotionTracker::begin() {
     mpu.initialize();
     delay(50);
     
-    // Verify connection
+    // Verify connection (Standard MPU6050 WHO_AM_I is 0x68)
     uint8_t whoami = mpu.getDeviceID();
-    if (whoami != 0x38) {
+    if (whoami != 0x68 && whoami != 0x34) { 
+        Serial.print("MPU6050 ID check failed: 0x");
+        Serial.println(whoami, HEX);
         return false;
     }
     

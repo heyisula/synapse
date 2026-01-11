@@ -71,6 +71,11 @@ bool FirebaseManager::sendData(const FirebaseTxData& d) {
 bool FirebaseManager::receiveData(FirebaseRxData& d) {
     if (!ready()) return false;
 
+    // Non-blocking throttling: Don't fetch from server too fast
+    static unsigned long lastRX = 0;
+    if (millis() - lastRX < 1000) return true; // Keep old data if less than 1s passed
+    lastRX = millis();
+
     if (!Firebase.getJSON(fbdo, "/")) {
         Serial.print("Firebase RX failed: ");
         Serial.println(fbdo.errorReason());

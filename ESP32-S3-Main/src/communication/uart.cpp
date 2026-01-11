@@ -14,12 +14,15 @@ void UARTProtocol::begin() {
 
 
 void UARTProtocol::sendMotorCommand(MotorCommand cmd, uint8_t speed) {
-    // Put command and speed into the transmit buffer
-    transfer.txObj(cmd, 0);
-    transfer.txObj(constrain(speed, 0, 100), 1);
+    uint8_t cmdValue = (uint8_t)cmd;
+    uint8_t speedValue = constrain(speed, 0, 100);
 
-    // Send the packet over Serial1
-    transfer.sendData(2);  // no parameters needed
+    // Put command and speed into distinct slots
+    transfer.txObj(cmdValue, 0);       // Slot 0: Command
+    transfer.txObj(speedValue, 1);    // Slot 1: Speed
+
+    // Send exactly 2 bytes of data objects
+    transfer.sendData(2); 
 }
 
 

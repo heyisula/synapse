@@ -55,7 +55,6 @@ private:
     void updateMovementPermissions();
 
 public:
-    // For API/Data logging
     struct SensorData {
         float frontDist;
         float rearDist;

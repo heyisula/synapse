@@ -196,8 +196,8 @@ String ColorSensor::monitorColor(bool colour_start) {
             isColorSensingActive = true;
             Serial.println("Color sensing STARTED");
             lastDetectedColor = "UNKNOWN";
+            // calibrate(); // Removed redundant 500ms blocking call
         }
-        calibrate();
         update();
         
         ColorType detectedType = getColorType();

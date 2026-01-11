@@ -2,11 +2,6 @@
 #include "../config/pins.h"
 #include "config/constants.h"
 
-// Adjustable for best loudness
-#define CONFIRM_FREQ    1800
-#define WARNING_FREQ    2600
-#define ERROR_FREQ      1400
-#define EMERGENCY_FREQ  3000
 
 Buzzer::Buzzer() {
     buzzer1Pin = BUZZER_1;
