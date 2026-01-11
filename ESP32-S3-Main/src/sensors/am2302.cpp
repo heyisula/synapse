@@ -13,7 +13,8 @@ Environmental::Environmental()
 
 bool Environmental::begin() {
     sensor.begin();
-    delay(2000);
+    // Removed blocking delay. The first reading might fail or return old data, 
+    // but that's better than freezing the system.
     return true;
 }
 

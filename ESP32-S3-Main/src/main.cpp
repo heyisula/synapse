@@ -1,60 +1,90 @@
 #include <Arduino.h>
-#include "sensors/mpu6050.h"
 
-MotionTracker motion;
+// Pin definitions from pins.h
+#define S1 16
+#define S2 4
+#define S3 5
+#define S4 6
+#define S5 7
+
+// Arrays for pins and calibration values
+int sensorPins[5] = {S1, S2, S3, S4, S5};
+int whiteVal[5]; // max readings (white)
+int blackVal[5]; // min readings (black)
+
+// Forward declaration
+int readSensor(int pin);
 
 void setup() {
-    Serial.begin(115200);
-    delay(1000);
+  Serial.begin(115200);
+  delay(100);
+  
+  analogReadResolution(12);       // 12-bit ADC
+  analogSetAttenuation(ADC_11db); // full range
 
-    Serial.println();
-    Serial.println("=== MotionTracker Test ===");
+  // Set sensor pins as input
+  for (int i = 0; i < 5; i++) pinMode(sensorPins[i], INPUT);
 
-    if (!motion.begin()) {
-        Serial.println("ERROR: MPU6050 not detected!");
-        while (true) {
-            delay(1000);
-        }
-    }
+  Serial.println("=== Line Sensor Auto-Calibration ===");
+  delay(1000);
 
-    Serial.println("MPU6050 detected successfully.");
-    delay(500);
+  // Auto calibration for WHITE background
+  Serial.println("Place sensors over WHITE surface...");
+  delay(3000);
+  for (int i = 0; i < 5; i++) {
+    whiteVal[i] = readSensor(sensorPins[i]);
+  }
 
-    motion.autoCalibrate();
-    Serial.println("Starting live data output...");
-    Serial.println();
+  // Auto calibration for BLACK line
+  Serial.println("Place sensors over BLACK line...");
+  delay(3000);
+  for (int i = 0; i < 5; i++) {
+    blackVal[i] = readSensor(sensorPins[i]);
+  }
+
+  Serial.println("Calibration done!");
+  Serial.print("White values: ");
+  for (int i = 0; i < 5; i++) Serial.print(whiteVal[i]), Serial.print("\t");
+  Serial.println();
+  
+  Serial.print("Black values: ");
+  for (int i = 0; i < 5; i++) Serial.print(blackVal[i]), Serial.print("\t");
+  Serial.println("\n\nStarting line detection:");
+  delay(1000);
 }
 
 void loop() {
-    motion.update();
+  int lineState[5];
 
-    Serial.print("Pitch: ");
-    Serial.print(motion.getPitch(), 2);
-    Serial.print(" deg | Roll: ");
-    Serial.print(motion.getRoll(), 2);
-    Serial.print(" deg");
+  // Read and map sensor values
+  for (int i = 0; i < 5; i++) {
+    int raw = readSensor(sensorPins[i]);
+    
+    // Normalize 0-1000
+    int normalized = map(raw, blackVal[i], whiteVal[i], 0, 1000);
+    normalized = constrain(normalized, 0, 1000);
+    
+    // Detect line: 0 = black, 1 = white
+    lineState[i] = (normalized > 500) ? 1 : 0;
+  }
 
-    Serial.print(" | Ax: ");
-    Serial.print(motion.getAccelX(), 3);
-    Serial.print(" g");
+  // Print line detection
+  for (int i = 0; i < 5; i++) {
+    Serial.print(lineState[i]);
+    Serial.print("\t");
+  }
+  Serial.println();
 
-    Serial.print(" | Ay: ");
-    Serial.print(motion.getAccelY(), 3);
-    Serial.print(" g");
+  delay(100);
+}
 
-    Serial.print(" | Az: ");
-    Serial.print(motion.getAccelZ(), 3);
-    Serial.print(" g");
-
-    Serial.print(" | FwdAcc: ");
-    Serial.print(motion.getForwardAcceleration(), 3);
-    Serial.print(" g");
-
-    Serial.print(" | SideAcc: ");
-    Serial.print(motion.getSideAcceleration(), 3);
-    Serial.print(" g");
-
-    Serial.println();
-
-    delay(500); // ~20 Hz output
+// Function to read sensor with smoothing
+int readSensor(int pin) {
+  const int SAMPLES = 5;
+  long sum = 0;
+  for (int i = 0; i < SAMPLES; i++) {
+    sum += analogRead(pin);
+    delay(1);
+  }
+  return sum / SAMPLES;
 }

@@ -34,8 +34,19 @@ public:
     void tripleBeep();
     void emergencyAlarm();
     void stop();
+    void update(); // Must be called in main loop
 
     void controlFromFirebase(bool buzzer01ring, bool buzzer02ring, int buzzersound);
+
+private:
+    unsigned long patternStartTime;
+    unsigned long nextStepTime;
+    int currentStep;
+    int totalSteps;
+    bool patternActive;
+    
+    // Pattern definitions
+    void startPattern(int type);
 };
 
 #endif

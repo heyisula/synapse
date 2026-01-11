@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 #include "sensors/max30102.h"
-#include "sensors/am2303.h"
+#include "sensors/am2302.h"
 #include "sensors/lm393.h"
 #include "actuators/ermc1604syg.h"
 #include "actuators/sfm27.h"

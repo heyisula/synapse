@@ -48,7 +48,7 @@ bool MonitoringSystem::initialize() {
     }
     display->setCursor(11, 2);
     display->print("OK");
-    delay(500);
+    delay(100);
     
     // Initialize environmental sensor
     display->setCursor(0, 2);
@@ -62,7 +62,7 @@ bool MonitoringSystem::initialize() {
     }
     display->setCursor(11, 2);
     display->print("OK");
-    delay(500);
+    delay(100);
     
     // Initialize light sensor
     display->setCursor(0, 2);
@@ -82,35 +82,15 @@ bool MonitoringSystem::initialize() {
 void MonitoringSystem::calibrateSensors() {
     Serial.println("=== Calibrating Sensors ===");
     currentState = STATE_CALIBRATING;
+    alertStartTime = millis(); // Reuse this variable for start time
     
     display->clear();
     display->setCursor(0, 0);
     display->print("Calibrating...");
     display->setCursor(0, 1);
     display->print("Please wait...");
-    
-    unsigned long startTime = millis();
-    int countdown = CALIBRATION_TIME / 1000;
-    
-    while (millis() - startTime < CALIBRATION_TIME) {
-        // Update sensors during calibration
-        heartSensor->update();
-        envSensor->update();
-        lightSensor->update();
-        
-        // Show countdown
-        display->setCursor(0, 2);
-        display->print("Time: ");
-        display->print(countdown);
-        display->print(" sec   ");
-        
-        delay(1000);
-        countdown--;
-    }
-    
-    buzzer->playTone(TONE_CONFIRM);
-    Serial.println("Calibration complete");
 }
+
 
 void MonitoringSystem::startMonitoring() {
     Serial.println("=== Starting Continuous Monitoring ===");
@@ -128,6 +108,31 @@ void MonitoringSystem::startMonitoring() {
 }
 
 void MonitoringSystem::update() {
+    if (currentState == STATE_CALIBRATING) {
+        unsigned long elapsed = millis() - alertStartTime;
+        int remaining = (CALIBRATION_TIME - elapsed) / 1000;
+        
+        if (remaining >= 0) {
+           heartSensor->update();
+           envSensor->update();
+           lightSensor->update(); 
+           
+           if (millis() - lastDisplayUpdate >= 1000) {
+               display->setCursor(0, 2);
+               display->print("Time: ");
+               display->print(remaining);
+               display->print(" sec   ");
+               lastDisplayUpdate = millis();
+           }
+           return;
+        } else {
+            buzzer->playTone(TONE_CONFIRM);
+            Serial.println("Calibration complete");
+            startMonitoring();
+            return;
+        }
+    }
+
     if (currentState != STATE_MONITORING && currentState != STATE_ALERT_ACTIVE) {
         return;
     }
@@ -230,7 +235,9 @@ void MonitoringSystem::checkTemperatureAlert() {
             alertStartTime = millis();
             Serial.println("ALERT: Temperature out of range!");
         }
-    } else {
+    } else if (currentData.ambientTemp > (TEMP_MIN + HYSTERESIS_TEMP) && 
+               currentData.ambientTemp < (TEMP_MAX - HYSTERESIS_TEMP)) {
+        // Only clear alert if we are safely inside the range (Hysteresis)
         tempAlertActive = false;
     }
 }
@@ -246,7 +253,8 @@ void MonitoringSystem::checkHumidityAlert() {
             alertStartTime = millis();
             Serial.println("ALERT: Humidity out of range!");
         }
-    } else {
+    } else if (currentData.humidity > (HUMIDITY_MIN + HYSTERESIS_HUMIDITY) && 
+               currentData.humidity < (HUMIDITY_MAX - HYSTERESIS_HUMIDITY)) {
         humidityAlertActive = false;
     }
 }

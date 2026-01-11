@@ -26,7 +26,9 @@ bool Display::begin() {
     lcd.setCursor(0, 3);
     lcd.print(" Backlight: ON  ");
 
-    delay(2000);
+    lcd.print(" Backlight: ON  ");
+
+    delay(500);
     return true;
 }
 

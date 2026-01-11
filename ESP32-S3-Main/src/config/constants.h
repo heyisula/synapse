@@ -11,11 +11,6 @@
 #define MIN_SAFE_DISTANCE 20         // cm
 #define SOUND_SPEED 0.034            // cm/microsecond
 
-// Following Mode Constants
-#define FOLLOW_DISTANCE_MIN 50       // cm
-#define FOLLOW_DISTANCE_MAX 200      // cm
-#define FOLLOW_DISTANCE_DEFAULT 100  // cm
-
 // Battery Constants
 #define BATTERY_LOW_VOLTAGE 10.5     // V
 #define BATTERY_CRITICAL_VOLTAGE 10.0 // V
@@ -26,9 +21,9 @@
 #define HEARTBEAT_INTERVAL 1000      // ms
 
 // Motor Speed Constants
-#define MOTOR_SPEED_MIN 100           // %
-#define MOTOR_SPEED_MAX 255          // %
-#define MOTOR_SPEED_DEFAULT 50       // %
+#define MOTOR_SPEED_MIN 30            // %
+#define MOTOR_SPEED_MAX 100           // %
+#define MOTOR_SPEED_DEFAULT 50        // %
 
 // Health Monitoring Constants
 #define HR_MIN 60                    // BPM

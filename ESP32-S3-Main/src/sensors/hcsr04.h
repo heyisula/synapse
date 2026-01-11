@@ -2,7 +2,8 @@
 #define HCSR04_H
 
 #include <Arduino.h>
-#include <Ultrasonic.h>  // Erick Simoes library
+#include <NewPing.h>
+#include <SimpleKalmanFilter.h>
 
 enum UltrasonicPosition {
     US_FRONT = 0,
@@ -14,7 +15,9 @@ enum UltrasonicPosition {
 
 class UltrasonicManager {
 private:
-    Ultrasonic* sensors[US_COUNT];  // Array of library objects
+    NewPing* sensors[US_COUNT];
+    SimpleKalmanFilter* filters[US_COUNT];
+
     float distances[US_COUNT];
     unsigned long lastReadTime;
     float minValid[US_COUNT];
@@ -26,10 +29,14 @@ private:
     int lastRearDistance;
     int lastRightDistance;
     
+    int currentSensorIndex;
+    unsigned long lastSensorReadTime;
+    
 
 
 public:
     UltrasonicManager();
+    ~UltrasonicManager();
     void begin();
     void update();
     float getDistance(UltrasonicPosition pos);

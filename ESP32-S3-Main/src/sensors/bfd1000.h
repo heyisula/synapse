@@ -3,10 +3,26 @@
 
 #include <Arduino.h>
 
-class LineFollower {
-private:
+class BFD1000 {
+public:
     static const uint8_t SENSOR_COUNT = 5;
 
+    BFD1000();
+
+    void begin();
+    void autoCalibrate(uint16_t durationMs = 3000);
+    void update();
+
+    // Raw sensor readings
+    int* getRawValues();
+
+    // Line detection
+    bool isBlack(uint8_t index);   // Single sensor black detection
+    bool isAnyBlack();             // Any sensor sees black
+    bool isAllBlack();             // All sensors see black
+    bool isAllWhite();             // All sensors see white
+
+private:
     uint8_t sensorPins[SENSOR_COUNT];
 
     int rawValues[SENSOR_COUNT];
@@ -14,27 +30,7 @@ private:
     int maxValues[SENSOR_COUNT];
     int thresholds[SENSOR_COUNT];
 
-    bool sensorStates[SENSOR_COUNT];      // true = black line detected
-    int linePosition;          // -2000 to +2000
-    int lastLinePosition;
-    unsigned long lastReadTime;
-    unsigned long lastLineSeenTime;
-
-public:
-    LineFollower();
-
-    void begin();
-    void calibrate(unsigned int duration);
-    void update();
-
-    bool isLineDetected();
-    bool isJunction();
-    bool isAllWhite();
-    bool isAllBlack();
-    bool isLineLost();
-
-    int getLinePosition();     // high-resolution position
-    int getError();            // PID-ready error
+    bool blackState[SENSOR_COUNT];
 };
 
 #endif

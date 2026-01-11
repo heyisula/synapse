@@ -4,39 +4,73 @@
 #include "../config/thresholds.h"
 
 UltrasonicManager::UltrasonicManager() {
-    sensors[US_FRONT] = new Ultrasonic(ULTRASONIC_FRONT_TRIG, ULTRASONIC_FRONT_ECHO);
-    sensors[US_BACK]  = new Ultrasonic(ULTRASONIC_BACK_TRIG, ULTRASONIC_BACK_ECHO);
-    sensors[US_LEFT]  = new Ultrasonic(ULTRASONIC_LEFT_TRIG, ULTRASONIC_LEFT_ECHO);
-    sensors[US_RIGHT] = new Ultrasonic(ULTRASONIC_RIGHT_TRIG, ULTRASONIC_RIGHT_ECHO);
+    sensors[US_FRONT] = new NewPing(ULTRASONIC_FRONT_TRIG, ULTRASONIC_FRONT_ECHO, 200);
+    sensors[US_BACK]  = new NewPing(ULTRASONIC_BACK_TRIG, ULTRASONIC_BACK_ECHO, 200);
+    sensors[US_LEFT]  = new NewPing(ULTRASONIC_LEFT_TRIG, ULTRASONIC_LEFT_ECHO, 200);
+    sensors[US_RIGHT] = new NewPing(ULTRASONIC_RIGHT_TRIG, ULTRASONIC_RIGHT_ECHO, 200);
 
     for(int i = 0; i < US_COUNT; i++) {
+        filters[i] = new SimpleKalmanFilter(2.0, 2.0, 0.01);
         distances[i] = MAX_ULTRASONIC_DISTANCE;
         minValid[i] = 5.0;     // cm
-        maxValid[i] = 180.0;   // cm (real HC-SR04 limit)
+        maxValid[i] = 180.0;   // cm
     }
+    
     lastReadTime = 0;
+    isUltrasonicMonitoringActive = false;
+    lastCenterDistance = 0;
+    lastLeftDistance = 0;
+    lastRearDistance = 0;
+    lastRightDistance = 0;
+    
+    currentSensorIndex = 0;
+    lastSensorReadTime = 0;
+}
+UltrasonicManager::~UltrasonicManager() {
+    // Clean up dynamically allocated memory
+    for(int i = 0; i < US_COUNT; i++) {
+        delete sensors[i];
+        delete filters[i];
+    }
 }
 
 void UltrasonicManager::begin() {
+    Serial.println("Ultrasonic sensors initialized with Kalman filtering");
 }
 
 void UltrasonicManager::update() {
     unsigned long currentTime = millis();
-    if (currentTime - lastReadTime >= SENSOR_READ_INTERVAL) {
-        for (int i = 0; i < US_COUNT; i++) {
-            distances[i] = sensors[i]->read() / 10.0;
-
-            if (distances[i] < 2.0) {
-                distances[i] = MAX_ULTRASONIC_DISTANCE; // ignore invalid
-            }
-
-            if (distances[i] > MAX_ULTRASONIC_DISTANCE) {
-                distances[i] = MAX_ULTRASONIC_DISTANCE;
-            }
-
-            delayMicroseconds(60000); // 60 ms between sensors
+    
+    // Non-blocking sensor cycle
+    // We read one sensor every (SENSOR_READ_INTERVAL / US_COUNT) roughly,
+    // or just use a fixed small delay between sensors to avoid cross-talk.
+    // Given 4 sensors, 60ms separation is good.
+    
+    if (currentTime - lastSensorReadTime >= 60) {
+        // Read current sensor
+        unsigned int rawDistance = sensors[currentSensorIndex]->ping_cm();
+        
+        if (rawDistance == 0 || rawDistance < minValid[currentSensorIndex]) {
+            rawDistance = MAX_ULTRASONIC_DISTANCE;
         }
-        lastReadTime = currentTime;
+        
+        float filteredDistance = filters[currentSensorIndex]->updateEstimate(rawDistance);
+        
+        if (filteredDistance < minValid[currentSensorIndex]) {
+            distances[currentSensorIndex] = MAX_ULTRASONIC_DISTANCE;
+        } else if (filteredDistance > maxValid[currentSensorIndex]) {
+            distances[currentSensorIndex] = MAX_ULTRASONIC_DISTANCE;
+        } else {
+            distances[currentSensorIndex] = filteredDistance;
+        }
+        
+        // Move to next sensor
+        currentSensorIndex++;
+        if (currentSensorIndex >= US_COUNT) {
+            currentSensorIndex = 0;
+        }
+        
+        lastSensorReadTime = currentTime;
     }
 }
 
@@ -72,6 +106,7 @@ bool UltrasonicManager::monitorUltrasonic(bool ultrasonic_start,
         rear = (int)round(rearDist);
         right = (int)round(rightDist);
 
+        // Only print if there's a significant change (> 5cm)
         if (abs(center - lastCenterDistance) > 5 || 
             abs(left - lastLeftDistance) > 5 || 
             abs(rear - lastRearDistance) > 5 || 
@@ -119,4 +154,5 @@ bool UltrasonicManager::monitorUltrasonic(bool ultrasonic_start,
         lastRightDistance = 0;
         
         return false;
+    }
 }
