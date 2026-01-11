@@ -14,7 +14,7 @@ enum LDRPosition {
 class LightSensor {
 private:
     uint8_t ldrPins[LDR_COUNT];
-    int lightLevels[LDR_COUNT];
+    bool lightLevels[LDR_COUNT];
     unsigned long lastReadTime;
     
     bool isCompartmentMonitoringActive;
@@ -23,6 +23,7 @@ public:
     LightSensor();
     void begin();
     void update();
+    
     int getLightLevel(LDRPosition pos);
     int getPathDarkness();
     bool isCompartmentOpen();

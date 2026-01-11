@@ -1,7 +1,6 @@
 #include "lm393.h"
 #include "../config/pins.h"
-#include "../config/constants.h"
-#include "../config/thresholds.h"
+#include <Arduino.h>
 
 #define SENSOR_READ_INTERVAL 100
 
@@ -12,7 +11,7 @@ LightSensor::LightSensor() {
     ldrPins[LDR_COMP_2] = LDR_COMPARTMENT_2;
     
     for(int i = 0; i < LDR_COUNT; i++) {
-        lightLevels[i] = 0;
+        lightLevels[i] = HIGH; // Default to HIGH (Light above threshold for many LM393 modules)
     }
     lastReadTime = 0;
 }
@@ -27,7 +26,7 @@ void LightSensor::update() {
     unsigned long currentTime = millis();
     if(currentTime - lastReadTime >= SENSOR_READ_INTERVAL) {
         for(int i = 0; i < LDR_COUNT; i++) {
-            lightLevels[i] = analogRead(ldrPins[i]);
+            lightLevels[i] = digitalRead(ldrPins[i]);
         }
         lastReadTime = currentTime;
     }
@@ -38,28 +37,26 @@ int LightSensor::getLightLevel(LDRPosition pos) {
 }
 
 int LightSensor::getPathDarkness() {
-    int avgLight = (lightLevels[LDR_PATH_L] + lightLevels[LDR_PATH_R]) / 2;
-    int darkness = map(avgLight, 0, 4095, 255, 0); // ESP32 ADC: 0-4095
-    return constrain(darkness, 0, 255); //255 Dark, 0 Bright
+    // For LM393: 
+    // LOW = Light detected (above threshold)
+    // HIGH = Dark (below threshold)
+    // If either sensor sees dark, we consider it "darker"
+    if (lightLevels[LDR_PATH_L] == HIGH && lightLevels[LDR_PATH_R] == HIGH) return 255;
+    if (lightLevels[LDR_PATH_L] == HIGH || lightLevels[LDR_PATH_R] == HIGH) return 128;
+    return 0;
 }
 
 bool LightSensor::isCompartmentOpen() {
-    int avgLight = (lightLevels[LDR_COMP_1] + lightLevels[LDR_COMP_2]) / 2;
-    return avgLight > COMPARTMENT_LIGHT_THRESHOLD; // define in thresholds.h
+    // If either compartment sensor detects light (LOW), consider it open
+    return (lightLevels[LDR_COMP_1] == LOW || lightLevels[LDR_COMP_2] == LOW);
 }
 
 int LightSensor::getPathLightLevel() {
     update();
-    int adcValue = (lightLevels[LDR_PATH_L] + lightLevels[LDR_PATH_R]) / 2;
-
-    // Replace A and B with your calibrated constants
-    float A = 1000.0; // Example after calibration
-    float B = -1.2;   // Example after calibration
-
-    float lux = A * pow(adcValue, B);
-
-    if (lux < 0) lux = 0;
-    return lux;
+    int darkness = getPathDarkness();
+    if (darkness == 0) return 1000;    // Both sensors detect light (Bright)
+    if (darkness == 128) return 500;   // Only one sensor detects light (Dim)
+    return 0;                         // Both sensors detect dark (Dark)
 }
 
 int LightSensor::monitorCompartment(bool compartment_start) {
@@ -72,13 +69,12 @@ int LightSensor::monitorCompartment(bool compartment_start) {
         }
 
         update();
-        int avgLight = (lightLevels[LDR_COMP_1] + lightLevels[LDR_COMP_2]) / 2;
         
         int currentState;
-        if (avgLight > COMPARTMENT_LIGHT_THRESHOLD) {
-            currentState = 0;
+        if (isCompartmentOpen()) {
+            currentState = 0; // OPEN
         } else {
-            currentState = 255;
+            currentState = 255; // CLOSED
         }
         
         // Log state changes
@@ -87,8 +83,6 @@ int LightSensor::monitorCompartment(bool compartment_start) {
             Serial.println("┌─────────────────────────");
             Serial.print("│ Compartment: ");
             Serial.println(currentState == 0 ? "OPEN" : "CLOSED");
-            Serial.print("│ Light Level: ");
-            Serial.println(avgLight);
             Serial.println("└─────────────────────────");
         }
         
