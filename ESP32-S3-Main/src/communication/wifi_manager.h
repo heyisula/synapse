@@ -18,23 +18,19 @@ private:
     String password;
     unsigned long lastReconnectAttempt;
     int reconnectInterval;
-    
+
+    void checkConnection();
+
 public:
     WiFiManager();
     void begin(const char* ssid, const char* password);
     void update();
-    
+
     bool isConnected() { return connected; }
     WiFiStatus getStatus();
-    
-    void sendData(String topic, String data);
-    void sendAlert(String message, int priority);
-    
+
     void disconnect();
     void reconnect();
-    
-private:
-    void checkConnection();
 };
 
 #endif

@@ -42,4 +42,10 @@
 #define SPO2_MIN 95                  // %
 #define SPO2_MAX 100                 // %
 
+//Buzzer Constants
+#define CONFIRM_FREQ   500
+#define WARNING_FREQ   4000
+#define ERROR_FREQ     8000
+#define EMERGENCY_FREQ 2600
+
 #endif
