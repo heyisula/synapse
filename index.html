@@ -515,7 +515,12 @@
 
             // Light level
             if (data.lightlevel !== undefined) {
-                document.getElementById('lightlevel').textContent = data.lightlevel + ' lux';
+                let statusText = "";
+                if (data.lightlevel === 1000) statusText = "Bright";
+                else if (data.lightlevel === 500) statusText = "Dim";
+                else statusText = "Dark";
+                
+                document.getElementById('lightlevel').textContent = statusText + " (" + data.lightlevel + " lux)";
                 console.log('Light Level:', data.lightlevel);
             }
             
