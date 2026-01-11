@@ -25,7 +25,7 @@ public:
     void print(int value);
     void print(float value, int decimals = 1);
 
-    void displayStatus(String mode, int battery, float distance, int hr, int spo2);
+    void displayStatus(int battery, float temp, float humidity, int modeNum);
     void displayError(String error);
 };
 

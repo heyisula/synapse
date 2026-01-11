@@ -27,6 +27,8 @@
 #include "modes/line_following.h"
 #include "modes/obstacle_avoidance.h"
 #include "modes/automatic_lighting.h"
+#include "ui/menu.h"
+#include "ui/ky040.h"
 
 // Global Manager Instances
 WiFiManager wifi;
@@ -34,6 +36,8 @@ FirebaseManager firebase;
 UARTProtocol uart;
 Display display;
 Buzzer buzzer;
+RotaryEncoder encoder;
+MenuSystem* menu;
 
 // Sensor Instances
 HeartRateSensor heartRate;
@@ -91,8 +95,12 @@ void setup() {
     obstacleAvoid = new ObstacleAvoidance(&ultrasonic, &motion, &uart, &display, &buzzer);
     autoLighting = new AutomaticLighting(&lightSensor, &leds);
 
+    menu = new MenuSystem(&display, &buzzer, &encoder, autoLighting);
+
     autoLighting->begin();
     autoLighting->start();
+    encoder.begin();
+    menu->begin();
 
     Serial.println("=== SYSTEM READY ===");
     buzzer.doubleBeep();
@@ -101,6 +109,7 @@ void setup() {
 void loop() {
     // Background Tasks (Always Running)
     wifi.update();
+    lightSensor.update();
     autoLighting->update();
     buzzer.update();
     
@@ -143,17 +152,49 @@ void loop() {
         firebase.sendData(tx);
     }
 
-    // Mode Execution Logic
-    // For now, let's run monitoring and obstacle avoidance as defaults
-    monitoring->update();
-    obstacleAvoid->update();
+    // Update Menu and UI
+    menu->update();
+    menu->setEnvironmentalData(environmental.getTemperature(), environmental.getHumidity());
+    menu->getBatteryLevel(battery.readPercentage());
 
-    if (lineFollower->isLineDetected()) {
-        lineFollower->update();
-    }
-    
-    if (assistant->isActive()) {
-        assistant->update();
+    // Mode Execution Logic based on Menu Selection
+    MenuState currentState = menu->getCurrentState();
+
+    switch (currentState) {
+        case MAIN_MENU:
+            // Do nothing, just menu
+            break;
+            
+        case ASSISTANT_MODE:
+            assistant->update();
+            // In a real scenario, we'd check for failure and call displayError
+            // For example: if (assistant->hasFailed()) display.displayError("Assistant Break");
+            break;
+            
+        case MONITORING_MENU:
+            monitoring->update();
+            break;
+            
+        case OBSTACLE_AVOIDANCE_MODE:
+            obstacleAvoid->update();
+            break;
+            
+        case LINE_FOLLOWING:
+            if (lineFollower->isLineDetected()) {
+                lineFollower->update();
+            }
+            break;
+            
+        case SYSTEM_INFO:
+            // System info display is handled by MenuSystem::updateDisplay
+            break;
+            
+        case AUTO_LIGHTING_SUBMENU:
+            // Handled by MenuSystem internal logic
+            break;
+            
+        default:
+            break;
     }
 
     delay(10); // Minimal yield
