@@ -27,7 +27,6 @@ public:
     uint8_t getMaxSpeed();
     uint8_t getCurrentSpeed();
     
-    // Convenience methods for speed profiles
     uint8_t getSlowSpeed();
     uint8_t getMediumSpeed();
     uint8_t getFastSpeed();

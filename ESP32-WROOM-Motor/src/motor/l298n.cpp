@@ -1,17 +1,14 @@
 #include "l298n.h"
-#include "../config/pins.h"
-#include "../config/debug.h"
-#include "../config/constants.h"
-
-// ===== L298NMotor Implementation =====
+#include "config/pins.h"
+#include "config/debug.h"
+#include "config/constants.h"
 
 L298NMotor::L298NMotor(uint8_t in1, uint8_t in2, uint8_t en, uint8_t pwmChannel)
     : in1Pin(in1), in2Pin(in2), enPin(en), PWM_CHANNEL(pwmChannel) {
     currentSpeed = 0;
     isEnabled = true;
     initialized = false;
-    
-    // Validate PWM
+    // Validate PWM channel
     if (PWM_CHANNEL > 15) {
         DEBUG_PRINT("ERROR: Invalid PWM channel ");
         DEBUG_PRINT(PWM_CHANNEL);
@@ -94,8 +91,6 @@ void L298NMotor::setSpeed(uint8_t speed) {
     uint8_t pwmValue = map(currentSpeed, 0, 100, 0, 255);
     ledcWrite(PWM_CHANNEL, pwmValue);
 }
-
-// ===== L298NController Implementation =====
 
 L298NController::L298NController() {
     leftFrontMotor = new L298NMotor(LEFT_FRONT_IN1, LEFT_FRONT_IN2, LEFT_FRONT_ENA, 0);

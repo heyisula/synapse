@@ -1,5 +1,5 @@
 #include "movement.h"
-#include "../config/debug.h"
+#include "config/debug.h"
 
 MovementController::MovementController(L298NController* motors) {
     motorController = motors;
