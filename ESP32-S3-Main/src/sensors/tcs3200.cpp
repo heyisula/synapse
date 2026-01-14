@@ -38,8 +38,13 @@ void ColorSensor::update() {
     int r = tcs.colorRead('r');
     int g = tcs.colorRead('g');
     int b = tcs.colorRead('b');
+    
+    // Safety check: If all readings are basically zero, the sensor might be in the dark so skipping
+    if (r + g + b < 5) {
+        return;
+    }
 
-    // ---- Store into rolling buffer ----
+    //Store into rolling buffer
     rBuffer[bufferIndex] = r;
     gBuffer[bufferIndex] = g;
     bBuffer[bufferIndex] = b;
@@ -49,7 +54,7 @@ void ColorSensor::update() {
 
     int samples = bufferFilled ? COLOR_AVG_SAMPLES : bufferIndex;
 
-    // ---- Compute averaged RGB ----
+    //Compute averaged RGB
     long sumR = 0, sumG = 0, sumB = 0;
     for (int i = 0; i < samples; i++) {
         sumR += rBuffer[i];
@@ -61,7 +66,7 @@ void ColorSensor::update() {
     currentColor.green = sumG / samples;
     currentColor.blue  = sumB / samples;
 
-    // ---- Dynamic ambient auto-calibration ----
+    //Dynamic ambient auto-calibration
     int avgSum = currentColor.red + currentColor.green + currentColor.blue;
 
     // Only adapt when no strong color detected
@@ -112,7 +117,7 @@ ColorType ColorSensor::getColorType() {
     Serial.print(b); Serial.print(" SUM=");
     Serial.println(sum);
 
-    // ---- TOO DARK ----
+    //TOO DARK
     if (sum <= BLACK_SUM_MAX) {
         Serial.println("-> Too dark to read");
         return COLOR_UNKNOWN;
@@ -128,18 +133,18 @@ ColorType ColorSensor::getColorType() {
     Serial.print(gRatio, 3); Serial.print(" B=");
     Serial.println(bRatio, 3);
 
-    // ---- RED: R is strongly dominant ----
+    //RED: R is strongly dominant
     // R=21-40, G=5-9, B=7-12
 
     if (r >= RED_R_MIN && 
         r > g + RED_DIFF_MIN && 
-        r > b + RED_DIFF_MIN &&  // ← ADD THIS LINE
+        r > b + RED_DIFF_MIN &&
         rRatio > 0.60) { 
         Serial.println("-> RED");
         return COLOR_RED;
     }
 
-    // ---- BLUE: B is dominant ----
+    //BLUE: B is dominant
     // R=7-16, G=13-32, B=20-47
     if (b >= BLUE_B_MIN && 
         b > r + BLUE_DIFF_MIN && 
@@ -148,7 +153,7 @@ ColorType ColorSensor::getColorType() {
         Serial.println("-> BLUE");
         return COLOR_BLUE;
     }
-    // ---- WHITE: Balanced RGB ----
+    //WHITE: Balanced RGB
     // R=27-52, G=26-52, B=33-62
     if (r >= WHITE_R_MIN && 
         g >= WHITE_G_MIN && 
@@ -164,7 +169,7 @@ ColorType ColorSensor::getColorType() {
         }
     }
 
-    // ---- GREEN: G is dominant ----
+    //GREEN: G is dominant
     //  R=7-19, G=9-27, B=6-16
 
     if (g >= GREEN_G_MIN && 
@@ -196,7 +201,6 @@ String ColorSensor::monitorColor(bool colour_start) {
             isColorSensingActive = true;
             Serial.println("Color sensing STARTED");
             lastDetectedColor = "UNKNOWN";
-            // calibrate(); // Removed redundant 500ms blocking call
         }
         update();
         

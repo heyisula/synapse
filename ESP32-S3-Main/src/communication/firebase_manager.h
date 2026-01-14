@@ -10,26 +10,16 @@ struct FirebaseTxData {
     int angular;               // Send angular velocity
     int battery;               // Send battery level
     int voltage;               // Send voltage
-    
-    // Environment - SEND ONLY
     int temp;                  // Send temperature
     int humidity;              // Send humidity
     int lightlevel;            // Send light amount from path LDRs
-    
-    // Health - SEND ONLY
     int hr;                    // Send heart rate
     int sp02;                  // Send SpO2 level
-    
-    // Ultrasonic - SEND ONLY
     int ultrasonic_center;     // Send center distance
     int ultrasonic_left;       // Send left distance
     int ultrasonic_rear;       // Send rear distance
     int ultrasonic_right;      // Send right distance
-    
-    // Color - SEND ONLY
     String colour;             // Send detected color (RED/BLUE/GREEN/WHITE/UNKNOWN)
-    
-    // Compartment - SEND ONLY
     int compartment;           // Send compartment state (0=open, 255=closed)
 };
 

@@ -11,7 +11,7 @@ LightSensor::LightSensor() {
     ldrPins[LDR_COMP_2] = LDR_COMPARTMENT_2;
     
     for(int i = 0; i < LDR_COUNT; i++) {
-        lightLevels[i] = HIGH; // Default to HIGH (Light above threshold for many LM393 modules)
+        lightLevels[i] = HIGH;
     }
     lastReadTime = 0;
 }
@@ -37,17 +37,16 @@ int LightSensor::getLightLevel(LDRPosition pos) {
 }
 
 int LightSensor::getPathDarkness() {
-    // For LM393: 
     // LOW = Light detected (above threshold)
     // HIGH = Dark (below threshold)
-    // If either sensor sees dark, we consider it "darker"
+    // If either sensor sees dark,consider it "darker"
     if (lightLevels[LDR_PATH_L] == HIGH && lightLevels[LDR_PATH_R] == HIGH) return 255;
     if (lightLevels[LDR_PATH_L] == HIGH || lightLevels[LDR_PATH_R] == HIGH) return 128;
     return 0;
 }
 
 bool LightSensor::isCompartmentOpen() {
-    // If either compartment sensor detects light (LOW), consider it open
+    // If either compartment sensor detects light (LOW), consider it as open
     return (lightLevels[LDR_COMP_1] == LOW || lightLevels[LDR_COMP_2] == LOW);
 }
 

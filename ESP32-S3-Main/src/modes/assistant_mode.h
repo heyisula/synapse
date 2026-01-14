@@ -8,6 +8,7 @@
 #include "actuators/ermc1604syg.h" 
 #include "actuators/sfm27.h"
 #include "config/thresholds.h"
+
 enum StaffType {
     STAFF_UNKNOWN = 0,
     STAFF_DOCTOR,           // Blue uniform

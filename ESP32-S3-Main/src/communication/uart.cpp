@@ -5,6 +5,9 @@
 UARTProtocol::UARTProtocol() {
     serial = &Serial1;
     lastSendTime = 0;
+    lastSentCommand = CMD_STOP;
+    isWaitingForAck = false;
+    lastAckTime = 0;
 }
 
 void UARTProtocol::begin() {
@@ -18,11 +21,15 @@ void UARTProtocol::sendMotorCommand(MotorCommand cmd, uint8_t speed) {
     uint8_t speedValue = constrain(speed, 0, 100);
 
     // Put command and speed into distinct slots
-    transfer.txObj(cmdValue, 0);       // Slot 0: Command
-    transfer.txObj(speedValue, 1);    // Slot 1: Speed
+    transfer.txObj(cmdValue, 0);      
+    transfer.txObj(speedValue, 1);    
 
-    // Send exactly 2 bytes of data objects
     transfer.sendData(2); 
+
+    // Update tracking state
+    lastSentCommand = cmd;
+    lastSendTime = millis();
+    isWaitingForAck = true;
 }
 
 
@@ -36,7 +43,21 @@ bool UARTProtocol::receiveAcknowledgment(MotorCommand &cmd, uint8_t &speed) {
         // Read command and speed from receive buffer
         transfer.rxObj(cmd, 0);
         transfer.rxObj(speed, 1);
-        return true;  // acknowledgment received
+
+        // Verify if this matches what we sent
+        if (isWaitingForAck && cmd == lastSentCommand) {
+            isWaitingForAck = false;
+            lastAckTime = millis();
+            return true;  // Correct acknowledgment received
+        }
+        
+        return true; // Received some packet, even if not the specific ACK we waited for
     }
+
+    // Check for timeout
+    if (isWaitingForAck && (millis() - lastSendTime > 500)) {
+        isWaitingForAck = false; 
+    }
+
     return false;  // no data yet
 }

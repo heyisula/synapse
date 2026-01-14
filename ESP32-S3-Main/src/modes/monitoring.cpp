@@ -82,7 +82,7 @@ bool MonitoringSystem::initialize() {
 void MonitoringSystem::calibrateSensors() {
     Serial.println("=== Calibrating Sensors ===");
     currentState = STATE_CALIBRATING;
-    alertStartTime = millis(); // Reuse this variable for start time
+    alertStartTime = millis();
     
     display->clear();
     display->setCursor(0, 0);
@@ -390,8 +390,6 @@ void MonitoringSystem::storeData() {
     
     // Copy current to previous
     memcpy(&previousData, &currentData, sizeof(MonitoringData));
-    
-    // Here you could add SD card logging or other storage mechanisms
 }
 
 void MonitoringSystem::stopMonitoring() {
@@ -473,6 +471,4 @@ void MonitoringSystem::resetSystem() {
 }
 
 void MonitoringSystem::setMonitoringInterval(unsigned long interval) {
-    // Allow adjusting monitoring frequency if needed
-    // Note: This would require making MONITORING_INTERVAL non-const
 }

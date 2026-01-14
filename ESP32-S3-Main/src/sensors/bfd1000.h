@@ -13,14 +13,13 @@ public:
     void autoCalibrate(uint16_t durationMs = 3000);
     void update();
 
-    // Raw sensor readings
     int* getRawValues();
 
     // Line detection
     bool isBlack(uint8_t index);   // Single sensor black detection
-    bool isAnyBlack();             // Any sensor sees black
-    bool isAllBlack();             // All sensors see black
-    bool isAllWhite();             // All sensors see white
+    bool isAnyBlack();             
+    bool isAllBlack();             
+    bool isAllWhite();             
 
 private:
     uint8_t sensorPins[SENSOR_COUNT];

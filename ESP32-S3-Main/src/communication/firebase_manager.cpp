@@ -24,7 +24,7 @@ bool FirebaseManager::ready() {
 }
 
 void FirebaseManager::update() {
-    // Reserved for future background tasks if needed
+    
 }
 
 bool FirebaseManager::sendData(const FirebaseTxData& d) {
@@ -59,7 +59,7 @@ bool FirebaseManager::sendData(const FirebaseTxData& d) {
     // Compartment - SEND ONLY
     json.set("compartment", d.compartment);
 
-    if (!Firebase.updateNode(fbdo, "/telemetry", json)) {
+    if (!Firebase.updateNode(fbdo, "/", json)) {
         Serial.print("Firebase TX failed: ");
         Serial.println(fbdo.errorReason());
         return false;
@@ -71,12 +71,11 @@ bool FirebaseManager::sendData(const FirebaseTxData& d) {
 bool FirebaseManager::receiveData(FirebaseRxData& d) {
     if (!ready()) return false;
 
-    // Non-blocking throttling: Don't fetch from server too fast
     static unsigned long lastRX = 0;
     if (millis() - lastRX < 1000) return true; // Keep old data if less than 1s passed
     lastRX = millis();
 
-    if (!Firebase.getJSON(fbdo, "/controls")) {
+    if (!Firebase.getJSON(fbdo, "/")) {
         Serial.print("Firebase RX failed: ");
         Serial.println(fbdo.errorReason());
         return false;
@@ -95,12 +94,14 @@ bool FirebaseManager::receiveData(FirebaseRxData& d) {
     json.get(jd, "buzzersound");
     if (jd.success) d.buzzersound = jd.intValue;
 
+
     // LED brightness control - RECEIVE ONLY
     json.get(jd, "lightadj_left");
     if (jd.success) d.lightadj_left = jd.intValue;
 
     json.get(jd, "lightadj_right");
     if (jd.success) d.lightadj_right = jd.intValue;
+
 
     // Sensor start/stop flags - RECEIVE ONLY
     json.get(jd, "colour_start");

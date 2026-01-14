@@ -41,11 +41,6 @@ void UltrasonicManager::begin() {
 void UltrasonicManager::update() {
     unsigned long currentTime = millis();
     
-    // Non-blocking sensor cycle
-    // We read one sensor every (SENSOR_READ_INTERVAL / US_COUNT) roughly,
-    // or just use a fixed small delay between sensors to avoid cross-talk.
-    // Given 4 sensors, 60ms separation is good.
-    
     if (currentTime - lastSensorReadTime >= 60) {
         // Read current sensor
         unsigned int rawDistance = sensors[currentSensorIndex]->ping_cm();

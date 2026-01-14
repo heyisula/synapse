@@ -28,7 +28,6 @@ enum MonitoringState {
     STATE_ERROR
 };
 
-// Data storage structure
 struct MonitoringData {
     // Patient vitals
     int heartRate;

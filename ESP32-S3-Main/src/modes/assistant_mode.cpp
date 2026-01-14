@@ -215,7 +215,6 @@ void AssistantMode::identifyStaff() {
         }
         
         buzzer->doubleBeep();
-        // Delay handled by state machine
         currentState = ASSISTANT_STATE_IDENTIFIED_DELAY;
         stateStartTime = millis();
         
@@ -359,7 +358,7 @@ void AssistantMode::sendFollowingCommand() {
         return;
     }
     
-    // Priority 1: Rotation
+    //1: Rotation
     if (abs(lateralError) > 15) {
         if (lateralError > 0) {
             uart->sendMotorCommand(CMD_RIGHT, 30);
@@ -369,7 +368,7 @@ void AssistantMode::sendFollowingCommand() {
             Serial.println("← Adjusting left");
         }
     } 
-    // Priority 2: Distance
+    //2: Distance
     else if (abs(distanceError) > distanceTolerance) {
         
         if (distanceError > distanceTolerance) {
@@ -385,7 +384,7 @@ void AssistantMode::sendFollowingCommand() {
             Serial.println(speed);
         }
     }
-    // Priority 3: Stop
+    //3: Stop
     else {
         uart->sendMotorCommand(CMD_STOP, 0);
         Serial.println("→ Maintaining distance");
@@ -426,5 +425,49 @@ String AssistantMode::staffTypeToString(StaffType staff) {
 }
 
 void AssistantMode::displayCurrentState() {
-    // Display updates handled in each state function
+    display->clear();
+    display->setCursor(0, 0);
+    display->print("Mode: Following");
+    display->setCursor(0, 1);
+    display->print("Staff: ");
+    display->print(staffTypeToString(identifiedStaff).substring(0, 4));
+    display->setCursor(0, 2);
+    display->print("Dist: ");
+    display->print(centerDistance);
+    display->print("cm      ");
+    display->setCursor(0, 3);
+    display->print("State: ");
+    
+    switch (currentState) {
+        case ASSISTANT_STATE_WAITING_CARD:
+            display->print("Waiting Card ");
+            break;
+        case ASSISTANT_STATE_IDENTIFYING:
+            display->print("Identifying  ");
+            break;
+        case ASSISTANT_STATE_IDENTIFIED_DELAY:
+            display->print("Identified   ");
+            break;
+        case ASSISTANT_STATE_WAITING_DISTANCE:
+            display->print("Waiting Dist ");
+            break;
+        case ASSISTANT_STATE_DISTANCE_CONFIRM_DELAY:
+            display->print("Dist Confirm ");
+            break;
+        case ASSISTANT_STATE_FOLLOWING:
+            display->print("Following    ");
+            break;
+        case ASSISTANT_STATE_TRACKING_LOST:
+            display->print("Tracking Lost");
+            break;
+        case ASSISTANT_STATE_TRACKING_LOST_DELAY:
+            display->print("Lost Delay   ");
+            break;
+        case ASSISTANT_STATE_ERROR:
+            display->print("ERROR        ");
+            break;
+        default:
+            display->print("Idle         ");
+            break;
+    }
 }

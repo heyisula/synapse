@@ -29,15 +29,14 @@ void LineFollowing::update() {
 }
 
 float LineFollowing::calculateError() {
-    // Weight sensors: S1=-2, S2=-1, S3=0, S4=1, S5=2
     float error = 0;
     int count = 0;
 
-    if (sensor->isBlack(0)) { error -= 2; count++; }
-    if (sensor->isBlack(1)) { error -= 1; count++; }
+    if (sensor->isBlack(0)) { error -= 2; count++; }// Leftmost
+    if (sensor->isBlack(1)) { error -= 1; count++; }// Left
     if (sensor->isBlack(2)) { error += 0; count++; } // Center
-    if (sensor->isBlack(3)) { error += 1; count++; }
-    if (sensor->isBlack(4)) { error += 2; count++; }
+    if (sensor->isBlack(3)) { error += 1; count++; }// Right
+    if (sensor->isBlack(4)) { error += 2; count++; }// Rightmost
 
     if (count == 0) return lastError; // Keep last error if line lost
     

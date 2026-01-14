@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <Wire.h>
 #include "config/pins.h"
 #include "config/constants.h"
 #include "config/credentials.h"
@@ -27,6 +28,8 @@
 #include "modes/line_following.h"
 #include "modes/obstacle_avoidance.h"
 #include "modes/automatic_lighting.h"
+#include "ui/menu.h"
+#include "ui/ky040.h"
 
 // Global Manager Instances
 WiFiManager wifi;
@@ -34,6 +37,8 @@ FirebaseManager firebase;
 UARTProtocol uart;
 Display display;
 Buzzer buzzer;
+RotaryEncoder encoder;
+MenuSystem* menu;
 
 // Sensor Instances
 HeartRateSensor heartRate;
@@ -55,106 +60,215 @@ AutomaticLighting* autoLighting;
 
 void setup() {
     Serial.begin(115200);
-    delay(1000);
+    delay(2000); // Give serial monitor time to connect
     Serial.println("=== SYNAPSE S3 BOOTING ===");
 
-    // Initialize UI
+    // 1. Initialize I2C Bus FIRST (Crucial for Display and I2C Sensors)
+    Serial.print("Initializing I2C Bus (SDA: "); Serial.print(I2C_SDA); 
+    Serial.print(", SCL: "); Serial.print(I2C_SCL); Serial.println(")...");
+    Wire.begin(I2C_SDA, I2C_SCL);
+    Wire.setClock(I2C_FREQUENCY);
+    Serial.println("I2C Bus Ready.");
+
+    // 2. Initialize Buzzer (Audio feedback)
+    Serial.print("Initializing Buzzer...");
+    buzzer.begin();
+    buzzer.playTone(TONE_CONFIRM);
+    Serial.println("Done.");
+    
+    // 3. Initialize UI (Display requires I2C)
+    Serial.print("Initializing Display...");
     display.begin();
     display.clear();
     display.print("Synapse S3");
     display.setCursor(0, 1);
     display.print("Booting Systems...");
+    Serial.println("Done.");
 
-    buzzer.begin();
-    buzzer.playTone(TONE_CONFIRM);
-
-    // Initialize Communication
+    // 4. Initialize Communication
+    Serial.print("Initializing WiFi...");
     wifi.begin(WIFI_SSID, WIFI_PASSWORD);
+    Serial.println("Initiated.");
+
+    Serial.print("Initializing Firebase...");
     firebase.begin(FIREBASE_API_KEY, FIREBASE_DATABASE_URL, FIREBASE_USER_EMAIL, FIREBASE_USER_PASSWORD);
+    Serial.println("Initiated.");
+
+    Serial.print("Initializing UART...");
     uart.begin();
+    Serial.println("Done.");
 
-    // Initialize Sensors
+    // 5. Initialize Sensors
+    Serial.print("Initializing HeartRate (MAX30102)...");
     heartRate.begin();
-    environmental.begin();
-    lightSensor.begin();
-    ultrasonic.begin();
-    lineSensor.begin();
-    motion.begin();
-    colorSensor.begin();
-    leds.begin();
-    battery.begin();
+    Serial.println("Done.");
 
-    // Instantiate Modes
+    Serial.print("Initializing Environmental (AM2302)...");
+    environmental.begin();
+    Serial.println("Done.");
+
+    Serial.print("Initializing LightSensor...");
+    lightSensor.begin();
+    Serial.println("Done.");
+
+    Serial.print("Initializing Ultrasonic...");
+    ultrasonic.begin();
+    Serial.println("Done.");
+
+    Serial.print("Initializing LineSensor...");
+    lineSensor.begin();
+    Serial.println("Done.");
+
+    Serial.print("Initializing MotionTracker (MPU6050)...");
+    motion.begin();
+    Serial.println("Done.");
+
+    Serial.print("Initializing ColorSensor...");
+    colorSensor.begin();
+    Serial.println("Done.");
+
+    Serial.print("Initializing LEDs...");
+    leds.begin();
+    Serial.println("Done.");
+
+    Serial.print("Initializing Battery Monitor...");
+    battery.begin();
+    Serial.println("Done.");
+
+    // 6. Instantiate Modes
+    Serial.print("Setting up Modes & Menu...");
     monitoring = new MonitoringSystem(&heartRate, &environmental, &lightSensor, &display, &buzzer);
     assistant = new AssistantMode(&colorSensor, &ultrasonic, &uart, &display, &buzzer);
     lineFollower = new LineFollowing(&lineSensor, &uart, &display);
     obstacleAvoid = new ObstacleAvoidance(&ultrasonic, &motion, &uart, &display, &buzzer);
     autoLighting = new AutomaticLighting(&lightSensor, &leds);
 
+    menu = new MenuSystem(&display, &buzzer, &encoder, autoLighting);
+
     autoLighting->begin();
     autoLighting->start();
+    encoder.begin();
+    menu->begin();
+    Serial.println("Done.");
 
     Serial.println("=== SYSTEM READY ===");
     buzzer.doubleBeep();
 }
 
 void loop() {
-    // Background Tasks (Always Running)
+    // Background Tasks
     wifi.update();
+    lightSensor.update();
     autoLighting->update();
+    motion.update();
     buzzer.update();
     
-    // Firebase Comm
+    // UART Acknowledgment Check
+    MotorCommand ackCmd;
+    uint8_t ackSpeed;
+    if (uart.receiveAcknowledgment(ackCmd, ackSpeed)) {
+        Serial.println("ACK: Command received by Motor Controller");
+    }
+
+    // Check for Firebase commands every loop for low latency
+    static unsigned long lastFirebaseRx = 0;
+    static FirebaseRxData rx;
+    static int currentHR = 0, currentSpO2 = 0;
+    static int usCenter = 0, usLeft = 0, usRear = 0, usRight = 0;
+    static String currentColor = "UNKNOWN";
+    static int currentCompartment = 255;
+
+    if (millis() - lastFirebaseRx >= 100) { // Check every 100ms
+        lastFirebaseRx = millis();
+        if (firebase.receiveData(rx)) {
+            // Actuator real-time control
+            buzzer.controlFromFirebase(rx.buzzer01ring, rx.buzzer02ring, rx.buzzersound);
+            leds.controlFromFirebase(rx.lightadj_left, rx.lightadj_right);
+        }
+    }
+
+    // Real-time sensor monitoring (Mode independent)
+    heartRate.monitorHeartRate(rx.heartrate_start, currentHR, currentSpO2);
+    ultrasonic.monitorUltrasonic(rx.ultrasonic_start, usCenter, usLeft, usRear, usRight);
+    currentColor = colorSensor.monitorColor(rx.colour_start);
+    currentCompartment = lightSensor.monitorCompartment(rx.compartment_start);
+    
+    // Firebase Telemetry update (Keep at 2s)
     static unsigned long lastFirebaseUpdate = 0;
     if (millis() - lastFirebaseUpdate >= 2000) {
         lastFirebaseUpdate = millis();
-        
-        FirebaseRxData rx;
-        if (firebase.receiveData(rx)) {
-            // Process commands from Firebase
-            if (rx.heartrate_start) monitoring->startMonitoring();
-            else if (monitoring->isMonitoring()) monitoring->stopMonitoring();
 
-            assistant->setFollowingMode(rx.colour_start); // Hypothetical mapping
-            
-            buzzer.controlFromFirebase(rx.buzzer01ring, rx.buzzer02ring, rx.buzzersound);
-        }
-
-        // Telemetry update
+        // Telemetry update using new methods and cached real-time values
         FirebaseTxData tx;
-        tx.acceleration = motion.getAccelerationInt();
-        tx.angular = motion.getAngularVelocityInt();
-        tx.temp = environmental.getTemperature();
-        tx.humidity = environmental.getHumidity();
-        tx.hr = heartRate.getHeartRate();
-        tx.sp02 = heartRate.getSpO2();
-        tx.battery = battery.readPercentage();
-        tx.voltage = battery.getVoltageInt();
+        motion.getMotionData(tx.acceleration, tx.angular);
+        environmental.getEnvironmentData(tx.temp, tx.humidity);
+        battery.getBatteryData(tx.battery, tx.voltage);
+        
+        tx.hr = currentHR;
+        tx.sp02 = currentSpO2;
         tx.lightlevel = lightSensor.getPathLightLevel(); 
         
-        tx.ultrasonic_center = ultrasonic.getDistance(US_FRONT);
-        tx.ultrasonic_left = ultrasonic.getDistance(US_LEFT);
-        tx.ultrasonic_rear = ultrasonic.getDistance(US_BACK);
-        tx.ultrasonic_right = ultrasonic.getDistance(US_RIGHT);
+        tx.ultrasonic_center = usCenter;
+        tx.ultrasonic_left = usLeft;
+        tx.ultrasonic_rear = usRear;
+        tx.ultrasonic_right = usRight;
         
-        tx.colour = colorSensor.monitorColor(false);
-        tx.compartment = 0; // TBD
+        tx.colour = currentColor;
+        tx.compartment = currentCompartment;
         
         firebase.sendData(tx);
     }
 
-    // Mode Execution Logic
-    // For now, let's run monitoring and obstacle avoidance as defaults
-    monitoring->update();
-    obstacleAvoid->update();
+    // Update Menu and UI
+    menu->update();
+    menu->setEnvironmentalData(environmental.getTemperature(), environmental.getHumidity());
+    menu->getBatteryLevel(battery.readPercentage());
 
-    if (lineFollower->isLineDetected()) {
-        lineFollower->update();
-    }
-    
-    if (assistant->isActive()) {
-        assistant->update();
+    // Mode Execution Logic based on Menu Selection
+    MenuState currentState = menu->getCurrentState();
+
+    // COMMUNICATION FAILSAFE: If connection to motor board is lost, pause movement modes
+    if (currentState != MAIN_MENU && currentState != SYSTEM_INFO && !uart.isConnected()) {
+        static unsigned long lastCommWarning = 0;
+        if (millis() - lastCommWarning > 5000) {
+            Serial.println("⚠ WARNING: Communication with Motor Board LOST!");
+            display.displayError("COMM LINK LOST");
+            lastCommWarning = millis();
+        }
+        return; // Don't execute movement modes if disconnected
     }
 
-    delay(10); // Minimal yield
+    switch (currentState) {
+        case MAIN_MENU:
+            break;
+            
+        case ASSISTANT_MODE:
+            assistant->update();
+            break;
+            
+        case MONITORING_MENU:
+            monitoring->update();
+            break;
+            
+        case OBSTACLE_AVOIDANCE_MODE:
+            obstacleAvoid->update();
+            break;
+            
+        case LINE_FOLLOWING:
+            if (lineFollower->isLineDetected()) {
+                lineFollower->update();
+            }
+            break;
+            
+        case SYSTEM_INFO:
+            break;
+            
+        case AUTO_LIGHTING_SUBMENU:
+            break;
+            
+        default:
+            break;
+    }
+
+    delay(10);
 }

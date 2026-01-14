@@ -24,7 +24,6 @@ void Buzzer::setVolume(int vol) {
     volume = constrain(vol, 0, 100);
 }
 
-// For active buzzers, we ignore frequency and use steady push-pull
 void Buzzer::drive(uint16_t duration_ms, uint16_t freq) {
     if (volume == 0) {
         stop();

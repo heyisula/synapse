@@ -35,7 +35,7 @@ void LEDArray::setStatus(bool leftOn, bool rightOn) {
 }
 
 void LEDArray::update() {
-    // Reserved for any periodic updates if needed
+    
 }
 
 void LEDArray::controlFromFirebase(int lightadj_left, int lightadj_right) {

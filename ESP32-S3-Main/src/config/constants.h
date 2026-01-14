@@ -7,7 +7,7 @@
 #define I2C_FREQUENCY 100000
 
 // Ultrasonic Constants
-#define MAX_ULTRASONIC_DISTANCE 200  // cm
+#define MAX_ULTRASONIC_DISTANCE 100  // cm
 #define MIN_SAFE_DISTANCE 20         // cm
 #define SOUND_SPEED 0.034            // cm/microsecond
 
@@ -31,6 +31,6 @@
 #define SPO2_MIN 95                  // %
 #define SPO2_MAX 100                 // %
 
-#define MPU_ALPHA 0.96f  // Start here, tune between 0.96-0.98
+#define MPU_ALPHA 0.96f  // Complementary filter constant
 
 #endif

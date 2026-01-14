@@ -22,9 +22,6 @@ HeartRateSensor::HeartRateSensor()
 }
 
 bool HeartRateSensor::begin() {
-    Wire.begin(I2C_SDA, I2C_SCL);
-    Wire.setClock(I2C_FREQUENCY);
-
     if (!particleSensor.begin(Wire, I2C_SPEED_FAST)) {
         Serial.println("MAX30102 not found! Check wiring/power.");
         return false;

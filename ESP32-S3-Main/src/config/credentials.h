@@ -2,13 +2,13 @@
 #define CREDENTIALS_H
 
 // WiFi Credentials
-#define WIFI_SSID "Your_WiFi_SSID"
-#define WIFI_PASSWORD "Your_WiFi_Password"
+#define WIFI_SSID "Isula's S24"
+#define WIFI_PASSWORD "deltadown"
 
 // Firebase Credentials
-#define FIREBASE_API_KEY "Your_Firebase_API_Key"
-#define FIREBASE_DATABASE_URL "Your_Firebase_Database_URL"
-#define FIREBASE_USER_EMAIL "Your_Firebase_Email"
-#define FIREBASE_USER_PASSWORD "Your_Firebase_Password"
+#define FIREBASE_API_KEY "AIzaSyBA033hpUU2hqUuE2MtOT_aOtXC9aW3Ji8"
+#define FIREBASE_DATABASE_URL "https://synapse-healthcare-default-rtdb.firebaseio.com"
+#define FIREBASE_USER_EMAIL "hello@synapse.com"
+#define FIREBASE_USER_PASSWORD "admin1234"
 
 #endif

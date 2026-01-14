@@ -13,8 +13,6 @@ Environmental::Environmental()
 
 bool Environmental::begin() {
     sensor.begin();
-    // Removed blocking delay. The first reading might fail or return old data, 
-    // but that's better than freezing the system.
     return true;
 }
 
@@ -43,7 +41,6 @@ void Environmental::update() {
         }
     }
 
-    // If we reach here → invalid read
     temperature = NAN;
     humidity = NAN;
 

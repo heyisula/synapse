@@ -41,7 +41,7 @@ void ObstacleAvoidance::begin() {
 }
 
 void ObstacleAvoidance::update() {
-    // Step 1: Read all sensor values (Non-blocking update)
+    //Read all sensor values
     ultrasonicMgr->update();
     motionTracker->update();
     buzzer->update(); 
@@ -49,26 +49,25 @@ void ObstacleAvoidance::update() {
     // Update internal distance caches
     updateSensorReadings();
 
-    // Step 2: Decision Making & UART Signaling
-    // Priority 1: Emergency Stop (Absolute priority)
+    //Decision Making & UART Signaling
+    //1: Emergency Stop
     if (frontDistance < EMERGENCY_STOP_DISTANCE) {
         currentStatus = STATUS_STOP;
         currentSpeed = 0;
         uart->sendEmergencyStop();
-        buzzer->playTone(TONE_ERROR); // Alert
+        buzzer->playTone(TONE_ERROR);
         displaySafetyStatus(STATUS_STOP);
         return;
     }
 
-    // Priority 2: Safe Reversing (If blocked behind)
+    //2: Safe Reversing
     if (rearDistance < COLLISION_DISTANCE_BACK) {
         currentStatus = STATUS_DONT_REVERSE;
-        // Don't send UART command here yet, let movement logic decide
     } else if (currentStatus == STATUS_DONT_REVERSE) {
         currentStatus = STATUS_CLEAR;
     }
 
-    // Priority 3: Autonomous Pathfinding
+    //3: Autonomous Pathfinding
     if (frontDistance < COLLISION_DISTANCE_FRONT) {
         // Path is partially blocked ahead
         currentStatus = STATUS_SLOW;
@@ -105,7 +104,7 @@ void ObstacleAvoidance::update() {
         Serial.println(currentSpeed);
     }
 
-    // Step 3: Handle Tilt/Gyro
+    //4: Handle Tilt/Gyro
     if (checkGyroAccelThreshold()) {
         // Override speed if unbalanced
         currentSpeed = MOTOR_SPEED_MIN;
@@ -121,13 +120,13 @@ void ObstacleAvoidance::update() {
 }
 
 void ObstacleAvoidance::updateSensorReadings() {
-    // Distance readings (Updated by ultrasonicMgr in main loop)
+    // Distance readings
     frontDistance = ultrasonicMgr->getDistance(US_FRONT);
     rearDistance = ultrasonicMgr->getDistance(US_BACK);
     leftDistance = ultrasonicMgr->getDistance(US_LEFT);
     rightDistance = ultrasonicMgr->getDistance(US_RIGHT);
 
-    // MPU6050 readings (Updated by motionTracker in main loop)
+    // MPU6050 readings)
     pitch = motionTracker->getPitch();  // Left/Right tilt
     roll = motionTracker->getRoll();    // Front/Back tilt
     accelX = motionTracker->getForwardAcceleration();
@@ -181,31 +180,26 @@ void ObstacleAvoidance::handleEmergencyStop() {
     currentStatus = STATUS_EMERGENCY;
     currentSpeed = 0;
 
-    // Step 1: Emergency Stop - send via UART using proper protocol
+    //Emergency Stop - send via UART using proper protocol
     uart->sendEmergencyStop();
 
-    // Step 2: Activate Audio Alert
+    //Activate Audio Alert
     buzzer->emergencyAlarm();
 
-    // Step 3: Display Safety Status: Stop
+    //Display Safety Status: Stop
     displaySafetyStatus(STATUS_STOP);
 }
 
 void ObstacleAvoidance::handleRearObstacle() {
     currentStatus = STATUS_DONT_REVERSE;
 
-    // Notify the motor controller to disable reverse movements
-    // Send STOP command with 0 speed when reversing is attempted
-    // The motor controller should check this status
-    
-    // Display Safety Status: Don't Reverse
     displaySafetyStatus(STATUS_DONT_REVERSE);
 }
 
 void ObstacleAvoidance::handleGyroAccelExceeded() {
     currentStatus = STATUS_SLOW;
 
-    // Reduce speed - send slow forward command via UART
+    // Reduce speed and send slow forward command via UART
     currentSpeed = MOTOR_SPEED_MIN;
     uart->sendMotorCommand(CMD_FORWARD, MOTOR_SPEED_MIN);
 
@@ -292,29 +286,15 @@ void ObstacleAvoidance::displaySafetyStatus(SafetyStatus status) {
 }
 
 void ObstacleAvoidance::updateMovementPermissions() {
-    // This function updates what movements are allowed
-    // based on current safety status
-    
-    // Send motor commands based on status using proper UART protocol
     switch (currentStatus) {
         case STATUS_CLEAR:
-            // Normal operation - no command sent here
-            // Motor controller handles normal movement commands
             break;
-
         case STATUS_SLOW:
-            // Already sent in handleGyroAccelExceeded()
-            // Reduced speed command with MOTOR_SPEED_MIN
             break;
-
         case STATUS_DONT_REVERSE:
-            // Motor controller should check canReverse() before sending reverse commands
-            // If a reverse command is attempted, it should be blocked
             break;
-
         case STATUS_STOP:
         case STATUS_EMERGENCY:
-            // Complete stop - send emergency stop command via UART
             uart->sendEmergencyStop();
             break;
     }

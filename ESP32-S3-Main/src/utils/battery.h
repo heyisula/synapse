@@ -18,7 +18,6 @@ public:
 private:
     uint8_t _adcPin;
 
-    // Voltage divider values (ohms)
     const float R1 = 100000.0;   // 100kΩ
     const float R2 = 33000.0;    // 33kΩ
 

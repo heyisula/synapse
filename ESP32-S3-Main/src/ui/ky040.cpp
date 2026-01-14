@@ -25,7 +25,6 @@ void RotaryEncoder::begin() {
     pinMode(ROTARY_DT, INPUT_PULLUP);
     pinMode(swPin, INPUT_PULLUP);
     
-    // Create KY040 instance (only CLK and DT pins)
     encoder = new KY040(ROTARY_CLK, ROTARY_DT);
 }
 
@@ -40,8 +39,7 @@ void RotaryEncoder::update() {
     } else if (rotation == KY040::COUNTERCLOCKWISE) {
         position--;
     }
-    
-    // Improved button handling with proper debouncing
+
     int reading = digitalRead(swPin);
     unsigned long currentTime = millis();
     

@@ -20,9 +20,9 @@ public:
     AutomaticLighting(LightSensor* sensor, LEDArray* leds);
     
     void begin();
-    void start();    // Start automatic lighting
-    void stop();     // Stop automatic lighting
-    void update();   // Call this in loop()
+    void start();    
+    void stop();     
+    void update();   
 };
 
 #endif

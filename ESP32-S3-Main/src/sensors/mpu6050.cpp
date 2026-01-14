@@ -17,13 +17,10 @@ MotionTracker::MotionTracker() : mpu(0x68) {
 }
 
 bool MotionTracker::begin() {
-    Wire.begin(I2C_SDA, I2C_SCL);
-    Wire.setClock(I2C_FREQUENCY);  // 100kHz for stability
-    
     mpu.initialize();
     delay(50);
     
-    // Verify connection (Standard MPU6050 WHO_AM_I is 0x68)
+    // Verify connection
     uint8_t whoami = mpu.getDeviceID();
     if (whoami != 0x68 && whoami != 0x34) { 
         Serial.print("MPU6050 ID check failed: 0x");
@@ -154,8 +151,6 @@ void MotionTracker::update() {
     sideAccel = accelY - sin(pitch * DEG_TO_RAD);
 
 }
-
-// ---------------- Getters ----------------
 
 float MotionTracker::getPitch() {
     return pitch;
