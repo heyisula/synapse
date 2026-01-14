@@ -13,9 +13,10 @@ void Buzzer::begin() {
     pinMode(buzzer1Pin, OUTPUT);
     pinMode(buzzer2Pin, OUTPUT);
     
-    patternActive = false;
-    currentStep = 0;
-    nextStepTime = 0;
+    buzzer1PatternActive = false;
+    buzzer2PatternActive = false;
+    lastBuzzer1Ring = false;
+    lastBuzzer2Ring = false;
     
     stop();
 }
@@ -24,15 +25,21 @@ void Buzzer::setVolume(int vol) {
     volume = constrain(vol, 0, 100);
 }
 
-void Buzzer::drive(uint16_t duration_ms, uint16_t freq) {
+void Buzzer::drive(uint16_t buzzerNum, uint16_t freq) {
     if (volume == 0) {
         stop();
         return;
     }
     
-    // Max loudness: Push-pull (one pin HIGH, one pin LOW)
-    digitalWrite(buzzer1Pin, HIGH);
-    digitalWrite(buzzer2Pin, LOW);
+    // Drive pins independently
+    if (buzzerNum == 1) {
+        digitalWrite(buzzer1Pin, HIGH);
+        Serial.println(" -> B1 HIGH");
+    }
+    else if (buzzerNum == 2) {
+        digitalWrite(buzzer2Pin, HIGH);
+        Serial.println(" -> B2 HIGH");
+    }
 }
 
 void Buzzer::stop() {
@@ -41,36 +48,63 @@ void Buzzer::stop() {
 }
 
 void Buzzer::playTone(BuzzerTone tone) {
-    patternActive = true;
-    patternStartTime = millis();
-    currentStep = 0;
-    
+    startPattern(1, tone);
+}
+
+void Buzzer::startPattern(int buzzerNum, BuzzerTone tone) {
+    int steps = 1;
     switch (tone) {
-        case TONE_CONFIRM:   totalSteps = 1; break; // 1 beep
-        case TONE_WARNING:   totalSteps = 3; break; // Beep, Sil, Beep
-        case TONE_ERROR:     totalSteps = 5; break; // Beep, Sil, Beep, Sil, Beep
-        case TONE_EMERGENCY: totalSteps = 19; break; // Rapid pulses
+        case TONE_CONFIRM:   steps = 1; break;
+        case TONE_WARNING:   steps = 3; break;
+        case TONE_ERROR:     steps = 5; break;
+        case TONE_EMERGENCY: steps = 19; break;
     }
-    nextStepTime = millis();
+
+    if (buzzerNum == 1) {
+        Serial.println(" -> B1 Pattern Start");
+        buzzer1PatternActive = true;
+        buzzer1Step = 0;
+        buzzer1TotalSteps = steps;
+        buzzer1NextStepTime = millis();
+    } else {
+        Serial.println(" -> B2 Pattern Start");
+        buzzer2PatternActive = true;
+        buzzer2Step = 0;
+        buzzer2TotalSteps = steps;
+        buzzer2NextStepTime = millis();
+    }
 }
 
 void Buzzer::update() {
-    if (!patternActive) return;
-
-    if (millis() >= nextStepTime) {
-        // Step logic: Even steps are ON, Odd steps are OFF
-        if (currentStep % 2 == 0) {
-            drive(0, 0); // Sound ON
-            nextStepTime = millis() + 150; // Duration 150ms
+    // Update Buzzer 1
+    if (buzzer1PatternActive && millis() >= buzzer1NextStepTime) {
+        if (buzzer1Step % 2 == 0) {
+            drive(1, 0);
+            buzzer1NextStepTime = millis() + 150;
         } else {
-            stop(); // Sound OFF
-            nextStepTime = millis() + 100; // Gap 100ms
+            digitalWrite(buzzer1Pin, LOW);
+            buzzer1NextStepTime = millis() + 100;
         }
+        buzzer1Step++;
+        if (buzzer1Step >= buzzer1TotalSteps) {
+            digitalWrite(buzzer1Pin, LOW);
+            buzzer1PatternActive = false;
+        }
+    }
 
-        currentStep++;
-        if (currentStep >= totalSteps) {
-            stop();
-            patternActive = false;
+    // Update Buzzer 2
+    if (buzzer2PatternActive && millis() >= buzzer2NextStepTime) {
+        if (buzzer2Step % 2 == 0) {
+            drive(2, 0);
+            buzzer2NextStepTime = millis() + 150;
+        } else {
+            digitalWrite(buzzer2Pin, LOW);
+            buzzer2NextStepTime = millis() + 100;
+        }
+        buzzer2Step++;
+        if (buzzer2Step >= buzzer2TotalSteps) {
+            digitalWrite(buzzer2Pin, LOW);
+            buzzer2PatternActive = false;
         }
     }
 }
@@ -79,47 +113,34 @@ void Buzzer::controlFromFirebase(bool buzzer01ring, bool buzzer02ring, int buzze
     if (buzzersound != lastVolume) {
         lastVolume = buzzersound;
         setVolume(buzzersound);
-        
-        Serial.print("Buzzer volume set to: ");
-        Serial.print(buzzersound);
-        Serial.println("%");
+        Serial.printf("Buzzer volume: %d%%\n", buzzersound);
     }
     
-    if (buzzer01ring) {
-        if (!buzzer1Active) {
-            buzzer1Active = true;
-            playTone(TONE_CONFIRM);
-        }
-    } else {
-        buzzer1Active = false;
+    if (buzzer01ring && !lastBuzzer1Ring) {
+        startPattern(1, TONE_CONFIRM);
     }
+    lastBuzzer1Ring = buzzer01ring;
     
-    if (buzzer02ring) {
-        if (!buzzer2Active) {
-            buzzer2Active = true;
-            playTone(TONE_EMERGENCY);
-        }
-    } else {
-        buzzer2Active = false;
+    if (buzzer02ring && !lastBuzzer2Ring) {
+        startPattern(2, TONE_EMERGENCY);
     }
+    lastBuzzer2Ring = buzzer02ring;
 }
 
 void Buzzer::singleBeep() {
-    playTone(TONE_CONFIRM);
+    startPattern(1, TONE_CONFIRM);
 }
 
 void Buzzer::doubleBeep() {
-    patternActive = true;
-    patternStartTime = millis();
-    currentStep = 0;
-    totalSteps = 3; // On, Off, On
-    nextStepTime = millis();
+    buzzer1PatternActive = true;
+    buzzer1Step = 0;
+    buzzer1TotalSteps = 3;
+    buzzer1NextStepTime = millis();
 }
 
 void Buzzer::tripleBeep() {
-    patternActive = true;
-    patternStartTime = millis();
-    currentStep = 0;
-    totalSteps = 5; // On, Off, On, Off, On
-    nextStepTime = millis();
+    buzzer1PatternActive = true;
+    buzzer1Step = 0;
+    buzzer1TotalSteps = 5;
+    buzzer1NextStepTime = millis();
 }

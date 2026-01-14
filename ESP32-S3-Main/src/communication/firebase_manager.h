@@ -2,7 +2,7 @@
 #define FIREBASE_MANAGER_H
 
 #include <Arduino.h>
-#include <FirebaseESP32.h>
+#include <Firebase_ESP_Client.h>
 
 struct FirebaseTxData {
     // Sensor readings - SEND ONLY

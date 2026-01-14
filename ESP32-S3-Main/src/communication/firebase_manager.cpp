@@ -7,13 +7,18 @@ void FirebaseManager::begin(const char* apiKey,
                             const char* userEmail,
                             const char* userPassword) {
 
+    Serial.println(" -> Config API...");
     config.api_key = apiKey;
     config.database_url = databaseUrl;
 
+    Serial.println(" -> Config Auth...");
     auth.user.email = userEmail;
     auth.user.password = userPassword;
 
+    Serial.println(" -> Calling Firebase.begin...");
     Firebase.begin(&config, &auth);
+    
+    Serial.println(" -> Setting reconnect...");
     Firebase.reconnectWiFi(true);
 
     Serial.println("Firebase Connected!");
