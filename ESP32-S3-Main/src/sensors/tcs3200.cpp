@@ -38,13 +38,6 @@ void ColorSensor::update() {
     int r = tcs.colorRead('r');
     int g = tcs.colorRead('g');
     int b = tcs.colorRead('b');
-    
-    // Safety check: If all readings are basically zero, the sensor might be in the dark
-    // and tcs.colorRead can block. 
-    if (r + g + b < 5) {
-        // Skip update to prevent potential pulseIn() timeout blocking
-        return;
-    }
 
     // ---- Store into rolling buffer ----
     rBuffer[bufferIndex] = r;

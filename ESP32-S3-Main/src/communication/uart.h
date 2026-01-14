@@ -23,9 +23,6 @@ private:
 
     unsigned long lastSendTime;
     
-    MotorCommand lastSentCommand;
-    bool isWaitingForAck;
-    unsigned long lastAckTime;
 
 public:
     UARTProtocol();
@@ -33,9 +30,6 @@ public:
     void sendMotorCommand(MotorCommand cmd, uint8_t speed);
     void sendEmergencyStop();
     bool receiveAcknowledgment(MotorCommand &cmd, uint8_t &speed);
-    
-    bool isLastCommandAcked() const { return !isWaitingForAck; }
-    bool isConnected() const { return (millis() - lastAckTime < 2000); }
 };
 
 #endif

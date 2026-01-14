@@ -27,8 +27,6 @@
 #include "modes/line_following.h"
 #include "modes/obstacle_avoidance.h"
 #include "modes/automatic_lighting.h"
-#include "ui/menu.h"
-#include "ui/ky040.h"
 
 // Global Manager Instances
 WiFiManager wifi;
@@ -36,8 +34,6 @@ FirebaseManager firebase;
 UARTProtocol uart;
 Display display;
 Buzzer buzzer;
-RotaryEncoder encoder;
-MenuSystem* menu;
 
 // Sensor Instances
 HeartRateSensor heartRate;
@@ -95,12 +91,8 @@ void setup() {
     obstacleAvoid = new ObstacleAvoidance(&ultrasonic, &motion, &uart, &display, &buzzer);
     autoLighting = new AutomaticLighting(&lightSensor, &leds);
 
-    menu = new MenuSystem(&display, &buzzer, &encoder, autoLighting);
-
     autoLighting->begin();
     autoLighting->start();
-    encoder.begin();
-    menu->begin();
 
     Serial.println("=== SYSTEM READY ===");
     buzzer.doubleBeep();
@@ -109,36 +101,24 @@ void setup() {
 void loop() {
     // Background Tasks (Always Running)
     wifi.update();
-    lightSensor.update();
     autoLighting->update();
     buzzer.update();
     
-    // UART Acknowledgment Check
-    MotorCommand ackCmd;
-    uint8_t ackSpeed;
-    if (uart.receiveAcknowledgment(ackCmd, ackSpeed)) {
-        Serial.println("ACK: Command received by Motor Controller");
-    }
-
-    // Check for Firebase commands every loop for low latency
-    static unsigned long lastFirebaseRx = 0;
-    if (millis() - lastFirebaseRx >= 100) { // Check every 100ms
-        lastFirebaseRx = millis();
-        FirebaseRxData rx;
-        if (firebase.receiveData(rx)) {
-            if (rx.heartrate_start) monitoring->startMonitoring();
-            else if (monitoring->isMonitoring()) monitoring->stopMonitoring();
-            assistant->setFollowingMode(rx.colour_start);
-            buzzer.controlFromFirebase(rx.buzzer01ring, rx.buzzer02ring, rx.buzzersound);
-        }
-    }
-    
-    // Firebase Telemetry update (Keep at 2s)
+    // Firebase Comm
     static unsigned long lastFirebaseUpdate = 0;
     if (millis() - lastFirebaseUpdate >= 2000) {
         lastFirebaseUpdate = millis();
         
-        // Telemetry update
+        FirebaseRxData rx;
+        if (firebase.receiveData(rx)) {
+            // Process commands from Firebase
+            if (rx.heartrate_start) monitoring->startMonitoring();
+            else if (monitoring->isMonitoring()) monitoring->stopMonitoring();
+
+            assistant->setFollowingMode(rx.colour_start); // Hypothetical mapping
+            
+            buzzer.controlFromFirebase(rx.buzzer01ring, rx.buzzer02ring, rx.buzzersound);
+        }
 
         // Telemetry update
         FirebaseTxData tx;
@@ -163,60 +143,17 @@ void loop() {
         firebase.sendData(tx);
     }
 
-    // Update Menu and UI
-    menu->update();
-    menu->setEnvironmentalData(environmental.getTemperature(), environmental.getHumidity());
-    menu->getBatteryLevel(battery.readPercentage());
+    // Mode Execution Logic
+    // For now, let's run monitoring and obstacle avoidance as defaults
+    monitoring->update();
+    obstacleAvoid->update();
 
-    // Mode Execution Logic based on Menu Selection
-    MenuState currentState = menu->getCurrentState();
-
-    // COMMUNICATION FAILSAFE: If connection to motor board is lost, pause movement modes
-    if (currentState != MAIN_MENU && currentState != SYSTEM_INFO && !uart.isConnected()) {
-        static unsigned long lastCommWarning = 0;
-        if (millis() - lastCommWarning > 5000) {
-            Serial.println("⚠ WARNING: Communication with Motor Board LOST!");
-            display.displayError("COMM LINK LOST");
-            lastCommWarning = millis();
-        }
-        return; // Don't execute movement modes if disconnected
+    if (lineFollower->isLineDetected()) {
+        lineFollower->update();
     }
-
-    switch (currentState) {
-        case MAIN_MENU:
-            // Do nothing, just menu
-            break;
-            
-        case ASSISTANT_MODE:
-            assistant->update();
-            // In a real scenario, we'd check for failure and call displayError
-            // For example: if (assistant->hasFailed()) display.displayError("Assistant Break");
-            break;
-            
-        case MONITORING_MENU:
-            monitoring->update();
-            break;
-            
-        case OBSTACLE_AVOIDANCE_MODE:
-            obstacleAvoid->update();
-            break;
-            
-        case LINE_FOLLOWING:
-            if (lineFollower->isLineDetected()) {
-                lineFollower->update();
-            }
-            break;
-            
-        case SYSTEM_INFO:
-            // System info display is handled by MenuSystem::updateDisplay
-            break;
-            
-        case AUTO_LIGHTING_SUBMENU:
-            // Handled by MenuSystem internal logic
-            break;
-            
-        default:
-            break;
+    
+    if (assistant->isActive()) {
+        assistant->update();
     }
 
     delay(10); // Minimal yield

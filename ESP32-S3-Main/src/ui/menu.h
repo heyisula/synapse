@@ -3,27 +3,28 @@
 
 #include <Arduino.h>
 
-// Forward declarations
-class Display;
-class Buzzer;
-class RotaryEncoder;
-class AutomaticLighting;
+#include "actuators/ermc1604syg.h"
+#include "actuators/sfm27.h" 
+#include "ky040.h"
+
+#include "modes/automatic_lighting.h"
+#include "modes/assistant_mode.h"
+#include "modes/line_following.h"
+#include "modes/monitoring.h"
+#include "modes/obstacle_avoidance.h"
 
 enum MenuState {
     MAIN_MENU,
     ASSISTANT_MODE,
+    LINE_FOLLOWING,
     MONITORING_MENU,
     OBSTACLE_AVOIDANCE_MODE,
-    LINE_FOLLOWING,
     SYSTEM_INFO,
-    AUTOMATIC_LIGHTING,
-    AUTO_LIGHTING_SUBMENU
+    AUTOMATIC_LIGHTING
 };
 
 struct SystemInfo {
     int batteryLevel;
-    float temperature;
-    float humidity;
     int currentSpeed;
     bool wifiConnected;
 };
@@ -32,8 +33,6 @@ class MenuSystem {
 private:
     Display* display;
     Buzzer* buzzer;
-    RotaryEncoder* encoder;
-    AutomaticLighting* autoLighting;
     MenuState currentMenu;
     MenuState previousMenu;
     SystemInfo settings;
@@ -51,11 +50,8 @@ private:
     void displayAutomaticLighting();
     
 public:
-    MenuSystem(Display* disp, Buzzer* bz, RotaryEncoder* enc, AutomaticLighting* al);
+    MenuSystem(Display* disp, Buzzer* bz);
     void begin();
-    void update(); // Add update method to handle encoder
-    MenuState getCurrentState() { return currentMenu; }
-    void setEnvironmentalData(float temp, float hum);
     void enter();
     void exit();
     void select();
