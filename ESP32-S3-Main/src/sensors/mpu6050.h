@@ -54,7 +54,7 @@ public:
 
     int getAccelerationInt();
     int getAngularVelocityInt();
-    void getMotionData(int& acceleration, int& angular);
+    void getMotionData(float& acceleration, int& angular);
 };
 
 #endif

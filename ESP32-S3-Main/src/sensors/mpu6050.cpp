@@ -218,25 +218,23 @@ int MotionTracker::getAngularVelocityInt() {
     return angular;
 }
 
-void MotionTracker::getMotionData(int& acceleration, int& angular) {
+void MotionTracker::getMotionData(float& acceleration, int& angular) {
     update();
     
     float accelMagnitude = getAccelMagnitude();
     float accelMS2 = accelMagnitude * 9.81f;
     
-    // Return acceleration in cm/s² to preserve precision in int
-    acceleration = (int)round(accelMS2 * 100.0f);
+    // Return acceleration in m/s² (float), rounded to 1 decimal place
+    acceleration = (round(accelMS2 * 10.0f) / 10.0f)-11.2f; // Subtract gravity offset for stationary
     
     // User requested "Robots Left and Right Angle" (Roll)
     // Positive Roll = Tilt Right (usually), depends on atan2 sign
     // Here we send the Angle in Degrees
-    angular = (int)round(roll); 
+    angular = ((int)round(roll))+3; // Small offset to calibrate level position
     
     Serial.print("Motion - Accel: ");
-    Serial.print(acceleration);
-    Serial.print(" (");
-    Serial.print(accelMS2, 2);
-    Serial.print(" m/s²), Tilt Angle: ");
+    Serial.print(acceleration, 2);
+    Serial.print(" m/s², Tilt Angle: ");
     Serial.print(angular);
     Serial.println("°");
 }
