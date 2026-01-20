@@ -58,21 +58,6 @@ void LEDArray::controlFromFirebase(int lightadj_left, int lightadj_right) {
     analogWrite(leftPin, leftPWM);
     analogWrite(rightPin, rightPWM);
     
-    // Log brightness changes
-    Serial.println("┌─────────────────────────");
-    Serial.print("│ LED Brightness Control:");
-    Serial.println();
-    Serial.print("│   Left:  ");
-    Serial.print(lightadj_left);
-    Serial.print("% (PWM: ");
-    Serial.print(leftPWM);
-    Serial.print(") ");
-    Serial.println(leftPWM == 0 ? "OFF" : "ON");
-    Serial.print("│   Right: ");
-    Serial.print(lightadj_right);
-    Serial.print("% (PWM: ");
-    Serial.print(rightPWM);
-    Serial.print(") ");
-    Serial.println(rightPWM == 0 ? "OFF" : "ON");
-    Serial.println("└─────────────────────────");
+    // Concise one-line log to avoid loop lag
+    Serial.printf("LEDs: L:%d%% R:%d%%\n", lightadj_left, lightadj_right);
 }

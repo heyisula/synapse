@@ -91,6 +91,7 @@ void setup() {
     Serial.println("Initiated.");
 
     Serial.print("Initializing Firebase...");
+    Serial.printf(" [Free Heap: %d] ", ESP.getFreeHeap());
     firebase.begin(FIREBASE_API_KEY, FIREBASE_DATABASE_URL, FIREBASE_USER_EMAIL, FIREBASE_USER_PASSWORD);
     Serial.println("Initiated.");
 
@@ -156,11 +157,6 @@ void setup() {
 }
 
 void loop() {
-    // Background Tasks
-    wifi.update();
-    lightSensor.update();
-    autoLighting->update();
-    motion.update();
     buzzer.update();
     
     // UART Acknowledgment Check
@@ -181,10 +177,18 @@ void loop() {
     if (millis() - lastFirebaseRx >= 100) { // Check every 100ms
         lastFirebaseRx = millis();
         if (firebase.receiveData(rx)) {
-            // Actuator real-time control
+            // Actuator real-time control (Overrides AutoLighting)
             buzzer.controlFromFirebase(rx.buzzer01ring, rx.buzzer02ring, rx.buzzersound);
             leds.controlFromFirebase(rx.lightadj_left, rx.lightadj_right);
         }
+    }
+
+    // WiFi and AutoLighting updates (Moved to governed intervals)
+    wifi.update();
+    
+    // Only run AutoLighting if Firebase manual override is OFF (0 brightness)
+    if (rx.lightadj_left == 0 && rx.lightadj_right == 0) {
+        autoLighting->update();
     }
 
     // Real-time sensor monitoring (Mode independent)
@@ -217,6 +221,10 @@ void loop() {
         tx.compartment = currentCompartment;
         
         firebase.sendData(tx);
+
+        // Concise telemetry log to save time
+        Serial.printf("Bat: %.2fV | HR: %d | L:%d | C:%s\n", 
+                      tx.voltage / 1000.0f, tx.hr, tx.lightlevel, tx.colour.c_str());
     }
 
     // Update Menu and UI
@@ -269,6 +277,4 @@ void loop() {
         default:
             break;
     }
-
-    delay(10);
 }
