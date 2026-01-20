@@ -7,21 +7,16 @@ void FirebaseManager::begin(const char* apiKey,
                             const char* userEmail,
                             const char* userPassword) {
 
-    Serial.println(" -> Config API...");
     config.api_key = apiKey;
     config.database_url = databaseUrl;
 
-    Serial.println(" -> Config Auth...");
     auth.user.email = userEmail;
     auth.user.password = userPassword;
 
-    Serial.println(" -> Calling Firebase.begin...");
+    // Non-blocking initialization - authentication happens asynchronously
     Firebase.begin(&config, &auth);
-    
-    Serial.println(" -> Setting reconnect...");
     Firebase.reconnectWiFi(true);
 
-    Serial.println("Firebase Connected!");
     initialized = true;
 }
 bool FirebaseManager::ready() {
@@ -41,6 +36,14 @@ bool FirebaseManager::sendData(const FirebaseTxData& d) {
     json.set("acceleration", d.acceleration);
     json.set("angular", d.angular);
     json.set("battery", d.battery);
+    
+    // DEBUG: Print voltage value before sending to Firebase
+    Serial.print("📤 Firebase TX - Voltage: ");
+    Serial.print(d.voltage, 4); // Print with 4 decimal places
+    Serial.print(" (type: float, raw bytes: ");
+    Serial.print(*(uint32_t*)&d.voltage, HEX);
+    Serial.println(")");
+    
     json.set("voltage", d.voltage);
 
     // Environment - SEND ONLY

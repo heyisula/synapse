@@ -2,14 +2,14 @@
 #define FIREBASE_MANAGER_H
 
 #include <Arduino.h>
-#include <Firebase_ESP_Client.h>
+#include <FirebaseESP32.h>
 
 struct FirebaseTxData {
     // Sensor readings - SEND ONLY
     int acceleration;           // Send acceleration
     int angular;               // Send angular velocity
     int battery;               // Send battery level
-    int voltage;               // Send voltage
+    float voltage;             // Send voltage
     int temp;                  // Send temperature
     int humidity;              // Send humidity
     int lightlevel;            // Send light amount from path LDRs

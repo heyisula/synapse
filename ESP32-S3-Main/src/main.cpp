@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <Wire.h>
+#include <WiFi.h>
 #include "config/pins.h"
 #include "config/constants.h"
 #include "config/credentials.h"
@@ -90,14 +91,45 @@ void setup() {
     wifi.begin(WIFI_SSID, WIFI_PASSWORD);
     Serial.println("Initiated.");
 
-    Serial.print("Initializing Firebase...");
-    Serial.printf(" [Free Heap: %d] ", ESP.getFreeHeap());
-    firebase.begin(FIREBASE_API_KEY, FIREBASE_DATABASE_URL, FIREBASE_USER_EMAIL, FIREBASE_USER_PASSWORD);
-    Serial.println("Initiated.");
+    // Wait for WiFi connection before initializing Firebase
+    display.setCursor(0, 2);
+    display.print("WiFi Connecting...");
+    
+    unsigned long wifiStartTime = millis();
+    const unsigned long WIFI_TIMEOUT = 30000; // 30 seconds
+    
+    while (WiFi.status() != WL_CONNECTED && (millis() - wifiStartTime < WIFI_TIMEOUT)) {
+        delay(500);
+        Serial.print(".");
+    }
+    
+    if (WiFi.status() == WL_CONNECTED) {
+        Serial.println("\nWiFi Connected!");
+        Serial.print("IP: ");
+        Serial.println(WiFi.localIP());
+        display.setCursor(0, 2);
+        display.print("WiFi: Connected  ");
+        delay(500);
+        
+        // Only initialize Firebase if WiFi is connected
+        Serial.print("Initializing Firebase...");
+        firebase.begin(FIREBASE_API_KEY, FIREBASE_DATABASE_URL, FIREBASE_USER_EMAIL, FIREBASE_USER_PASSWORD);
+        Serial.println("Initiated (auth in progress)");
+        Serial.flush(); // Ensure message is sent before UART takes over pins
+    } else {
+        Serial.println("\nWiFi Connection Failed!");
+        display.setCursor(0, 2);
+        display.print("WiFi: FAILED    ");
+        buzzer.playTone(TONE_ERROR);
+        Serial.println("Skipping Firebase (No WiFi)");
+        delay(2000);
+    }
 
-    Serial.print("Initializing UART...");
-    uart.begin();
-    Serial.println("Done.");
+    // Serial.println("Initializing UART (Debug output will stop due to shared pins)...");
+    // Serial.flush(); // Wait for message to send before pins are reconfigured
+    // uart.begin();
+    // Serial.println("Done."); // This won't be seen if pins are shared
+    Serial.println("Initializing UART... SKIPPED (Debugging Mode)");
 
     // 5. Initialize Sensors
     Serial.print("Initializing HeartRate (MAX30102)...");
@@ -157,14 +189,27 @@ void setup() {
 }
 
 void loop() {
+    // Background Tasks
+    wifi.update();
+    
+    // One-time Firebase authentication status check
+    static bool firebaseAuthLogged = false;
+    if (!firebaseAuthLogged && Firebase.ready()) {
+        Serial.println("✓ Firebase Authentication Complete!");
+        firebaseAuthLogged = true;
+    }
+    
+    lightSensor.update();
+    autoLighting->update();
+    motion.update();
     buzzer.update();
     
-    // UART Acknowledgment Check
-    MotorCommand ackCmd;
-    uint8_t ackSpeed;
-    if (uart.receiveAcknowledgment(ackCmd, ackSpeed)) {
-        Serial.println("ACK: Command received by Motor Controller");
-    }
+    // UART Acknowledgment Check - SKIPPED FOR DEBUG
+    // MotorCommand ackCmd;
+    // uint8_t ackSpeed;
+    // if (uart.receiveAcknowledgment(ackCmd, ackSpeed)) {
+    //     Serial.println("ACK: Command received by Motor Controller");
+    // }
 
     // Check for Firebase commands every loop for low latency
     static unsigned long lastFirebaseRx = 0;
@@ -177,18 +222,10 @@ void loop() {
     if (millis() - lastFirebaseRx >= 100) { // Check every 100ms
         lastFirebaseRx = millis();
         if (firebase.receiveData(rx)) {
-            // Actuator real-time control (Overrides AutoLighting)
+            // Actuator real-time control
             buzzer.controlFromFirebase(rx.buzzer01ring, rx.buzzer02ring, rx.buzzersound);
             leds.controlFromFirebase(rx.lightadj_left, rx.lightadj_right);
         }
-    }
-
-    // WiFi and AutoLighting updates (Moved to governed intervals)
-    wifi.update();
-    
-    // Only run AutoLighting if Firebase manual override is OFF (0 brightness)
-    if (rx.lightadj_left == 0 && rx.lightadj_right == 0) {
-        autoLighting->update();
     }
 
     // Real-time sensor monitoring (Mode independent)
@@ -221,10 +258,6 @@ void loop() {
         tx.compartment = currentCompartment;
         
         firebase.sendData(tx);
-
-        // Concise telemetry log to save time
-        Serial.printf("Bat: %.2fV | HR: %d | L:%d | C:%s\n", 
-                      tx.voltage / 1000.0f, tx.hr, tx.lightlevel, tx.colour.c_str());
     }
 
     // Update Menu and UI
@@ -235,16 +268,16 @@ void loop() {
     // Mode Execution Logic based on Menu Selection
     MenuState currentState = menu->getCurrentState();
 
-    // COMMUNICATION FAILSAFE: If connection to motor board is lost, pause movement modes
-    if (currentState != MAIN_MENU && currentState != SYSTEM_INFO && !uart.isConnected()) {
-        static unsigned long lastCommWarning = 0;
-        if (millis() - lastCommWarning > 5000) {
-            Serial.println("⚠ WARNING: Communication with Motor Board LOST!");
-            display.displayError("COMM LINK LOST");
-            lastCommWarning = millis();
-        }
-        return; // Don't execute movement modes if disconnected
-    }
+    // COMMUNICATION FAILSAFE: SKIPPED FOR DEBUG
+    // if (currentState != MAIN_MENU && currentState != SYSTEM_INFO && !uart.isConnected()) {
+    //     static unsigned long lastCommWarning = 0;
+    //     if (millis() - lastCommWarning > 5000) {
+    //         Serial.println("⚠ WARNING: Communication with Motor Board LOST!");
+    //         display.displayError("COMM LINK LOST");
+    //         lastCommWarning = millis();
+    //     }
+    //     return; // Don't execute movement modes if disconnected
+    // }
 
     switch (currentState) {
         case MAIN_MENU:
@@ -277,4 +310,6 @@ void loop() {
         default:
             break;
     }
+
+    delay(10);
 }

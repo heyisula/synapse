@@ -19,19 +19,9 @@ private:
     void drive(uint16_t cycles, uint16_t freq);
 
     // Buzzer state tracking
-    bool buzzer1PatternActive;
-    bool buzzer2PatternActive;
-    int buzzer1Step;
-    int buzzer2Step;
-    unsigned long buzzer1NextStepTime;
-    unsigned long buzzer2NextStepTime;
-    int buzzer1TotalSteps;
-    int buzzer2TotalSteps;
+    bool buzzer1Active;
+    bool buzzer2Active;
     int lastVolume;
-
-    // Firebase state
-    bool lastBuzzer1Ring;
-    bool lastBuzzer2Ring;
 
 public:
     Buzzer();
@@ -49,7 +39,14 @@ public:
     void controlFromFirebase(bool buzzer01ring, bool buzzer02ring, int buzzersound);
 
 private:
-    void startPattern(int buzzerNum, BuzzerTone tone);
+    unsigned long patternStartTime;
+    unsigned long nextStepTime;
+    int currentStep;
+    int totalSteps;
+    bool patternActive;
+    
+    // Pattern definitions
+    void startPattern(int type);
 };
 
 #endif

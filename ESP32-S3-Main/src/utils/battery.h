@@ -13,7 +13,7 @@ public:
 
     int getBatteryLevel();
     int getVoltageInt();
-    void getBatteryData(int& battery, int& voltage);
+    void getBatteryData(int& battery, float& voltage); // Voltage in Volts
 
 private:
     uint8_t _adcPin;
