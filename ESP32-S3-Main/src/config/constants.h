@@ -21,9 +21,9 @@
 #define HEARTBEAT_INTERVAL 1000      // ms
 
 // Motor Speed Constants
-#define MOTOR_SPEED_MIN 40            // %
+#define MOTOR_SPEED_MIN 52            // %
 #define MOTOR_SPEED_MAX 100           // %
-#define MOTOR_SPEED_DEFAULT 50        // %
+#define MOTOR_SPEED_DEFAULT 68        // %
 
 // Health Monitoring Constants
 #define HR_MIN 60                    // BPM

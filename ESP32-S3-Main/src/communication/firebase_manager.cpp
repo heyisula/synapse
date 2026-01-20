@@ -1,4 +1,5 @@
 #include "firebase_manager.h"
+#include "../utils/logger.h"
 
 FirebaseManager::FirebaseManager() : initialized(false) {}
 
@@ -60,8 +61,8 @@ bool FirebaseManager::sendData(const FirebaseTxData& d) {
     json.set("compartment", d.compartment);
 
     if (!Firebase.updateNode(fbdo, "/", json)) {
-        Serial.print("Firebase TX failed: ");
-        Serial.println(fbdo.errorReason());
+        Log.print("Firebase TX failed: ");
+        Log.println(fbdo.errorReason());
         return false;
     }
 
@@ -76,8 +77,8 @@ bool FirebaseManager::receiveData(FirebaseRxData& d) {
     lastRX = millis();
 
     if (!Firebase.getJSON(fbdo, "/")) {
-        Serial.print("Firebase RX failed: ");
-        Serial.println(fbdo.errorReason());
+        Log.print("Firebase RX failed: ");
+        Log.println(fbdo.errorReason());
         return false;
     }
 

@@ -52,6 +52,7 @@ private:
     unsigned long stateStartTime;
     unsigned long lastDisplayUpdate;
     unsigned long trackingLostTime;
+    bool followingMotionActive;
     
     int centerDistance;
     int leftDistance;

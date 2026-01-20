@@ -2,6 +2,7 @@
 #include "../config/constants.h"
 #include "../config/thresholds.h"
 #include "../config/pins.h"
+#include "../utils/logger.h"
 
 HeartRateSensor::HeartRateSensor()
     : heartRate(0),
@@ -23,7 +24,7 @@ HeartRateSensor::HeartRateSensor()
 
 bool HeartRateSensor::begin() {
     if (!particleSensor.begin(Wire, I2C_SPEED_FAST)) {
-        Serial.println("MAX30102 not found! Check wiring/power.");
+        Log.println("MAX30102 not found! Check wiring/power.");
         return false;
     }
     
@@ -44,8 +45,8 @@ bool HeartRateSensor::begin() {
     // Enable temperature reading
     particleSensor.enableDIETEMPRDY();
     
-    Serial.println("MAX30102 initialized successfully");
-    Serial.println("Place your finger on the sensor with steady pressure.");
+    Log.println("MAX30102 initialized successfully");
+    Log.println("Place your finger on the sensor with steady pressure.");
     
     return true;
 }
@@ -219,8 +220,8 @@ bool HeartRateSensor::monitorHeartRate(bool heartrate_start, int& hr, int& sp02)
 
         if (!isHeartRateMonitoringActive) {
             isHeartRateMonitoringActive = true;
-            Serial.println("=== Heart Rate monitoring STARTED ===");
-            Serial.println("Place your finger on the sensor...");
+            Log.println("=== Heart Rate monitoring STARTED ===");
+            Log.println("Place your finger on the sensor...");
             lastHeartRate = 0;
             lastSpO2 = 0;
         }
@@ -228,7 +229,7 @@ bool HeartRateSensor::monitorHeartRate(bool heartrate_start, int& hr, int& sp02)
         update();
         
         if (!fingerDetected) {
-            Serial.println("⚠ No finger detected - place finger on sensor");
+            Log.println("⚠ No finger detected - place finger on sensor");
             hr = 0;
             sp02 = 0;
             return false;
@@ -245,14 +246,14 @@ bool HeartRateSensor::monitorHeartRate(bool heartrate_start, int& hr, int& sp02)
                 lastHeartRate = currentHR;
                 lastSpO2 = currentSpO2;
                 
-                Serial.println("┌─────────────────────────");
-                Serial.print("│ Heart Rate: ");
-                Serial.print(hr);
-                Serial.println(" BPM");
-                Serial.print("│ SpO2: ");
-                Serial.print(sp02);
-                Serial.println("%");
-                Serial.println("└─────────────────────────");
+                Log.println("┌─────────────────────────");
+                Log.print("│ Heart Rate: ");
+                Log.print(hr);
+                Log.println(" BPM");
+                Log.print("│ SpO2: ");
+                Log.print(sp02);
+                Log.println("%");
+                Log.println("└─────────────────────────");
             }
             
             return true;
@@ -266,7 +267,7 @@ bool HeartRateSensor::monitorHeartRate(bool heartrate_start, int& hr, int& sp02)
 
         if (isHeartRateMonitoringActive) {
             isHeartRateMonitoringActive = false;
-            Serial.println("=== Heart Rate monitoring STOPPED ===");
+            Log.println("=== Heart Rate monitoring STOPPED ===");
         }
         
         hr = 0;

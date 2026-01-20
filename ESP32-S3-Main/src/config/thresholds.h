@@ -32,7 +32,7 @@
 // Human Following Distance Parameters
 #define TARGET_FOLLOW_DISTANCE 30    // cm
 #define DISTANCE_TOLERANCE 5         // cm
-#define MIN_FOLLOW_DISTANCE 15       // cm
+#define MIN_FOLLOW_DISTANCE 20       // cm
 #define MAX_FOLLOW_DISTANCE 100      // cm
 
 // Timing Parameters

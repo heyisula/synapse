@@ -1,6 +1,7 @@
 #include "monitoring.h"
 #include "config/thresholds.h"
 #include "config/constants.h"
+#include "../utils/logger.h"
 
 MonitoringSystem::MonitoringSystem(HeartRateSensor* hr, Environmental* env,
                                    LightSensor* light, Display* disp, Buzzer* buzz)
@@ -26,7 +27,7 @@ MonitoringSystem::MonitoringSystem(HeartRateSensor* hr, Environmental* env,
 }
 
 bool MonitoringSystem::initialize() {
-    Serial.println("=== Initializing Monitoring System ===");
+    Log.println("=== Initializing Monitoring System ===");
     currentState = STATE_INITIALIZING;
     
     // Initialize display
@@ -74,13 +75,13 @@ bool MonitoringSystem::initialize() {
     
     // Initialization complete
     buzzer->playTone(TONE_CONFIRM);
-    Serial.println("Monitoring system initialized successfully");
+    Log.println("Monitoring system initialized successfully");
     
     return true;
 }
 
 void MonitoringSystem::calibrateSensors() {
-    Serial.println("=== Calibrating Sensors ===");
+    Log.println("=== Calibrating Sensors ===");
     currentState = STATE_CALIBRATING;
     alertStartTime = millis();
     
@@ -93,7 +94,7 @@ void MonitoringSystem::calibrateSensors() {
 
 
 void MonitoringSystem::startMonitoring() {
-    Serial.println("=== Starting Continuous Monitoring ===");
+    Log.println("=== Starting Continuous Monitoring ===");
     currentState = STATE_MONITORING;
     
     display->clear();
@@ -212,12 +213,12 @@ void MonitoringSystem::readEnvironment() {
                                   !isnan(currentData.humidity);
     
     if (currentData.environmentValid) {
-        Serial.print("Ambient: ");
-        Serial.print(currentData.ambientTemp);
-        Serial.print("°C | Humidity: ");
-        Serial.print(currentData.humidity);
-        Serial.print("% | Light: ");
-        Serial.println(currentData.lightLevel);
+        Log.print("Ambient: ");
+        Log.print(currentData.ambientTemp);
+        Log.print("°C | Humidity: ");
+        Log.print(currentData.humidity);
+        Log.print("% | Light: ");
+        Log.println(currentData.lightLevel);
     }
 }
 
@@ -248,7 +249,7 @@ void MonitoringSystem::checkHumidityAlert() {
             activeAlert = ALERT_HUMIDITY;
             currentState = STATE_ALERT_ACTIVE;
             alertStartTime = millis();
-            Serial.println("ALERT: Humidity out of range!");
+            Log.println("ALERT: Humidity out of range!");
         }
     } else if (currentData.humidity > (HUMIDITY_MIN + HYSTERESIS_HUMIDITY) && 
                currentData.humidity < (HUMIDITY_MAX - HYSTERESIS_HUMIDITY)) {
@@ -263,7 +264,7 @@ void MonitoringSystem::checkLightAlert() {
             activeAlert = ALERT_LIGHT;
             currentState = STATE_ALERT_ACTIVE;
             alertStartTime = millis();
-            Serial.println("ALERT: Light level out of range!");
+            Log.println("ALERT: Light level out of range!");
         }
     } else {
         lightAlertActive = false;
@@ -279,7 +280,7 @@ void MonitoringSystem::checkHeartRateAlert() {
             activeAlert = ALERT_HEART_RATE;
             currentState = STATE_ALERT_ACTIVE;
             alertStartTime = millis();
-            Serial.println("ALERT: Heart rate abnormal!");
+            Log.println("ALERT: Heart rate abnormal!");
         }
     } else {
         hrAlertActive = false;
@@ -295,7 +296,7 @@ void MonitoringSystem::checkSpO2Alert() {
             activeAlert = ALERT_SPO2;
             currentState = STATE_ALERT_ACTIVE;
             alertStartTime = millis();
-            Serial.println("ALERT: Low oxygen saturation!");
+            Log.println("ALERT: Low oxygen saturation!");
         }
     } else {
         spo2AlertActive = false;
@@ -390,7 +391,7 @@ void MonitoringSystem::storeData() {
 }
 
 void MonitoringSystem::stopMonitoring() {
-    Serial.println("=== Stopping Monitoring ===");
+    Log.println("=== Stopping Monitoring ===");
     currentState = STATE_IDLE;
     
     display->clear();

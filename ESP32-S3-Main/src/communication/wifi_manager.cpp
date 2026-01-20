@@ -1,4 +1,5 @@
 #include "wifi_manager.h"
+#include "../utils/logger.h"
 
 WiFiManager::WiFiManager() : 
         connected(false),
@@ -10,8 +11,8 @@ void WiFiManager::begin(const char* wifiSSID, const char* wifiPassword) {
     ssid = String(wifiSSID);
     password = String(wifiPassword);
 
-    Serial.print("Connecting to WiFi: ");
-    Serial.println(ssid);
+    Log.print("Connecting to WiFi: ");
+    Log.println(ssid);
 
     WiFi.mode(WIFI_STA);
     WiFi.begin(ssid.c_str(), password.c_str());
@@ -30,12 +31,12 @@ void WiFiManager::checkConnection() {
         connected = currentlyConnected;
 
         if (connected) {
-            Serial.println("WiFi connected!");
-            Serial.print("IP Address: ");
-            Serial.println(WiFi.localIP());
+            Log.println("WiFi connected!");
+            Log.print("IP Address: ");
+            Log.println(WiFi.localIP());
             reconnectAttempts = 0;
         } else {
-            Serial.println("WiFi disconnected!");
+            Log.println("WiFi disconnected!");
         }
     }
 

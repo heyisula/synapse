@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <WiFi.h>
+#include <ESPAsyncWebServer.h>
+#include <WebSerial.h>
 #include "config/pins.h"
 #include "config/constants.h"
 #include "config/credentials.h"
@@ -31,6 +33,7 @@
 #include "modes/automatic_lighting.h"
 #include "ui/menu.h"
 #include "ui/ky040.h"
+#include "utils/logger.h"
 
 // Global Manager Instances
 WiFiManager wifi;
@@ -40,6 +43,29 @@ Display display;
 Buzzer buzzer;
 RotaryEncoder encoder;
 MenuSystem* menu;
+
+// Web Server
+AsyncWebServer server(80);
+
+// WebSerial Message Callback
+void onWebSerialMessage(uint8_t *data, size_t len) {
+    String msg = "";
+    for (size_t i = 0; i < len; i++) {
+        msg += (char)data[i];
+    }
+    Serial.print("WebSerial Received: ");
+    Serial.println(msg);
+
+    if (msg == "REBOOT") {
+        WebSerial.println("Rebooting...");
+        delay(1000);
+        ESP.restart();
+    }
+    if (msg == "STOP") {
+        uart.sendEmergencyStop();
+        WebSerial.println("EMERGENCY STOP SENT!");
+    }
+}
 
 // Sensor Instances
 HeartRateSensor heartRate;
@@ -62,34 +88,34 @@ AutomaticLighting* autoLighting;
 void setup() {
     Serial.begin(115200);
     delay(2000); // Give serial monitor time to connect
-    Serial.println("=== SYNAPSE S3 BOOTING ===");
+    Log.println("=== SYNAPSE S3 BOOTING ===");
 
     // 1. Initialize I2C Bus FIRST (Crucial for Display and I2C Sensors)
-    Serial.print("Initializing I2C Bus (SDA: "); Serial.print(I2C_SDA); 
-    Serial.print(", SCL: "); Serial.print(I2C_SCL); Serial.println(")...");
+    Log.print("Initializing I2C Bus (SDA: "); Log.print(I2C_SDA); 
+    Log.print(", SCL: "); Log.print(I2C_SCL); Log.println(")...");
     Wire.begin(I2C_SDA, I2C_SCL);
     Wire.setClock(I2C_FREQUENCY);
-    Serial.println("I2C Bus Ready.");
+    Log.println("I2C Bus Ready.");
 
     // 2. Initialize Buzzer (Audio feedback)
-    Serial.print("Initializing Buzzer...");
+    Log.print("Initializing Buzzer...");
     buzzer.begin();
     buzzer.playTone(TONE_CONFIRM);
-    Serial.println("Done.");
+    Log.println("Done.");
     
     // 3. Initialize UI (Display requires I2C)
-    Serial.print("Initializing Display...");
+    Log.print("Initializing Display...");
     display.begin();
     display.clear();
     display.print("Synapse S3");
     display.setCursor(0, 1);
     display.print("Booting Systems...");
-    Serial.println("Done.");
+    Log.println("Done.");
 
     // 4. Initialize Communication
-    Serial.print("Initializing WiFi...");
+    Log.print("Initializing WiFi...");
     wifi.begin(WIFI_SSID, WIFI_PASSWORD);
-    Serial.println("Initiated.");
+    Log.println("Initiated.");
 
     // Wait for WiFi connection before initializing Firebase
     display.setCursor(0, 2);
@@ -108,69 +134,76 @@ void setup() {
         Serial.print("IP: ");
         Serial.println(WiFi.localIP());
         display.setCursor(0, 2);
-        display.print("WiFi: Connected  ");
+        display.print("IP: ");
+        display.print(WiFi.localIP().toString());
         delay(500);
         
+        // Initialize WebSerial
+        WebSerial.begin(&server);
+        WebSerial.onMessage(onWebSerialMessage);
+        server.begin();
+        Log.println("✓ WebSerial Started");
+
         // Only initialize Firebase if WiFi is connected
-        Serial.print("Initializing Firebase...");
+        Log.print("Initializing Firebase...");
         firebase.begin(FIREBASE_API_KEY, FIREBASE_DATABASE_URL, FIREBASE_USER_EMAIL, FIREBASE_USER_PASSWORD);
-        Serial.println("Initiated (auth in progress)");
+        Log.println("Initiated (auth in progress)");
         Serial.flush(); // Ensure message is sent before UART takes over pins
     } else {
-        Serial.println("\nWiFi Connection Failed!");
+        Log.println("\nWiFi Connection Failed!");
         display.setCursor(0, 2);
         display.print("WiFi: FAILED    ");
         buzzer.playTone(TONE_ERROR);
-        Serial.println("Skipping Firebase (No WiFi)");
+        Log.println("Skipping Firebase (No WiFi)");
         delay(2000);
     }
 
     // 4. Initialize Sensors
-    Serial.print("Initializing HeartRate (MAX30102)...");
+    Log.print("Initializing HeartRate (MAX30102)...");
     heartRate.begin();
-    Serial.println("Done.");
+    Log.println("Done.");
 
-    Serial.print("Initializing Environmental (AM2302)...");
+    Log.print("Initializing Environmental (AM2302)...");
     environmental.begin();
-    Serial.println("Done.");
+    Log.println("Done.");
 
-    Serial.print("Initializing LightSensor...");
+    Log.print("Initializing LightSensor...");
     lightSensor.begin();
-    Serial.println("Done.");
+    Log.println("Done.");
 
-    Serial.print("Initializing Ultrasonic...");
+    Log.print("Initializing Ultrasonic...");
     ultrasonic.begin();
-    Serial.println("Done.");
+    Log.println("Done.");
 
-    Serial.print("Initializing LineSensor...");
+    Log.print("Initializing LineSensor...");
     lineSensor.begin();
-    Serial.println("Done.");
+    Log.println("Done.");
 
-    Serial.print("Initializing MotionTracker (MPU6050)...");
+    Log.print("Initializing MotionTracker (MPU6050)...");
     motion.begin();
-    Serial.println("Done.");
+    Log.println("Done.");
 
-    Serial.print("Initializing ColorSensor...");
+    Log.print("Initializing ColorSensor...");
     colorSensor.begin();
-    Serial.println("Done.");
+    Log.println("Done.");
 
-    Serial.print("Initializing LEDs...");
+    Log.print("Initializing LEDs...");
     leds.begin();
-    Serial.println("Done.");
+    Log.println("Done.");
 
-    Serial.print("Initializing Battery Monitor...");
+    Log.print("Initializing Battery Monitor...");
     battery.begin();
-    Serial.println("Done.");
+    Log.println("Done.");
 
     // 5. Initialize UART (Motor Control)
-    Serial.println("Initializing UART (Motor Control)...");
+    Log.println("Initializing UART (Motor Control)...");
     uart.begin();
     // Send a "Kick-start" command to initialize the connection
     uart.sendMotorCommand(CMD_STOP, 0); 
-    Serial.println("Done.");
+    Log.println("Done.");
 
     // 6. Instantiate Modes
-    Serial.print("Setting up Modes & Menu...");
+    Log.print("Setting up Modes & Menu...");
     monitoring = new MonitoringSystem(&heartRate, &environmental, &lightSensor, &display, &buzzer);
     assistant = new AssistantMode(&colorSensor, &ultrasonic, &uart, &display, &buzzer);
     lineFollower = new LineFollowing(&lineSensor, &uart, &display);
@@ -183,9 +216,9 @@ void setup() {
     autoLighting->start();
     encoder.begin();
     menu->begin();
-    Serial.println("Done.");
+    Log.println("Done.");
 
-    Serial.println("=== SYSTEM READY ===");
+    Log.println("=== SYSTEM READY ===");
     buzzer.doubleBeep();
 }
 
@@ -196,7 +229,7 @@ void loop() {
     // One-time Firebase authentication status check
     static bool firebaseAuthLogged = false;
     if (!firebaseAuthLogged && Firebase.ready()) {
-        Serial.println("✓ Firebase Authentication Complete!");
+        Log.println("✓ Firebase Authentication Complete!");
         firebaseAuthLogged = true;
     }
     
@@ -209,7 +242,7 @@ void loop() {
     MotorCommand ackCmd;
     uint8_t ackSpeed;
     if (uart.receiveAcknowledgment(ackCmd, ackSpeed)) {
-        Serial.println("ACK: Command received by Motor Controller");
+        Log.println("ACK: Command received by Motor Controller");
     }
 
     // Check for Firebase commands every loop for low latency
@@ -279,7 +312,7 @@ void loop() {
     if (hasConnectedOnce && currentState != MAIN_MENU && currentState != SYSTEM_INFO && !uart.isConnected()) {
         static unsigned long lastCommWarning = 0;
         if (millis() - lastCommWarning > 5000) {
-            Serial.println("⚠ WARNING: Communication with Motor Board LOST!");
+            Log.println("⚠ WARNING: Communication with Motor Board LOST!");
             display.displayError("COMM LINK LOST");
             lastCommWarning = millis();
         }
@@ -291,7 +324,7 @@ void loop() {
     if (currentVoltage < BATTERY_CRITICAL_VOLTAGE) {
         static unsigned long lastBatteryWarning = 0;
         if (millis() - lastBatteryWarning > 5000) {
-            Serial.print("!!! CRITICAL BATTERY: "); Serial.print(currentVoltage); Serial.println("V !!!");
+            Log.print("!!! CRITICAL BATTERY: "); Log.print(currentVoltage); Log.println("V !!!");
             display.displayError("BATTERY CRITICAL");
             uart.sendEmergencyStop();
             buzzer.playTone(TONE_ERROR);

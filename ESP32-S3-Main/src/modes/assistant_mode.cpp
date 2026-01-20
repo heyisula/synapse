@@ -1,6 +1,7 @@
 #include "assistant_mode.h"
 #include "config/constants.h"
 #include "config/thresholds.h"
+#include "../utils/logger.h"
 
 AssistantMode::AssistantMode(ColorSensor* cs, UltrasonicManager* us, 
                                         UARTProtocol* uart_proto, Display* disp, Buzzer* buzz) {
@@ -28,12 +29,13 @@ AssistantMode::AssistantMode(ColorSensor* cs, UltrasonicManager* us,
     leftDistance = 0;
     rearDistance = 0;
     rightDistance = 0;
+    followingMotionActive = false;
 }
 
 void AssistantMode::begin() {
-    Serial.println("==============================================");
-    Serial.println("    STAFF IDENTIFICATION SYSTEM INITIALIZED   ");
-    Serial.println("==============================================");
+    Log.println("==============================================");
+    Log.println("    STAFF IDENTIFICATION SYSTEM INITIALIZED   ");
+    Log.println("==============================================");
     
     display->clear();
     display->setCursor(0, 0);
@@ -48,7 +50,7 @@ void AssistantMode::begin() {
     delay(2000);
     
     buzzer->playTone(TONE_CONFIRM);
-    Serial.println("System ready for operation");
+    Log.println("System ready for operation");
 }
 
 void AssistantMode::setFollowingMode(bool enable) {
@@ -58,9 +60,9 @@ void AssistantMode::setFollowingMode(bool enable) {
         currentState = ASSISTANT_STATE_WAITING_CARD;
         stateStartTime = millis();
         
-        Serial.println("\n╔════════════════════════════════════════╗");
-        Serial.println("║  HUMAN FOLLOWING MODE ACTIVATED        ║");
-        Serial.println("╚════════════════════════════════════════╝");
+        Log.println("\n╔════════════════════════════════════════╗");
+        Log.println("║  HUMAN FOLLOWING MODE ACTIVATED        ║");
+        Log.println("╚════════════════════════════════════════╝");
         
         display->clear();
         display->setCursor(0, 0);
@@ -77,9 +79,9 @@ void AssistantMode::setFollowingMode(bool enable) {
         currentState = ASSISTANT_STATE_IDLE;
         stopRobot();
         
-        Serial.println("\n╔════════════════════════════════════════╗");
-        Serial.println("║  HUMAN FOLLOWING MODE DEACTIVATED      ║");
-        Serial.println("╚════════════════════════════════════════╝");
+        Log.println("\n╔════════════════════════════════════════╗");
+        Log.println("║  HUMAN FOLLOWING MODE DEACTIVATED      ║");
+        Log.println("╚════════════════════════════════════════╝");
         
         display->clear();
         display->setCursor(0, 0);
@@ -348,46 +350,62 @@ void AssistantMode::handleTrackingLost() {
 
 void AssistantMode::sendFollowingCommand() {
     int distanceError = centerDistance - targetDistance;
-    
     int lateralError = leftDistance - rightDistance;
     
+    // Safety check first
     if (centerDistance < MIN_FOLLOW_DISTANCE) {
         uart->sendMotorCommand(CMD_EMERGENCY_STOP, 0);
         buzzer->playTone(TONE_WARNING);
-        Serial.println("⚠ Too close! Emergency stop!");
+        Log.println("⚠ Too close! Following safety halt.");
+        followingMotionActive = false;
         return;
     }
-    
-    //1: Rotation
-    if (abs(lateralError) > 15) {
-        if (lateralError > 0) {
-            uart->sendMotorCommand(CMD_RIGHT, 30);
-            Serial.println("→ Adjusting right");
-        } else {
-            uart->sendMotorCommand(CMD_LEFT, 30);
-            Serial.println("← Adjusting left");
-        }
+
+    // Hysteresis Logic for Forward/Backward
+    // "Start" moving if error is large (> 10cm)
+    if (abs(distanceError) > 10) {
+        followingMotionActive = true;
     } 
-    //2: Distance
-    else if (abs(distanceError) > distanceTolerance) {
-        
-        if (distanceError > distanceTolerance) {
-            uint8_t speed = constrain(map(distanceError, distanceTolerance, 50, 30, 80), 30, 80);
-            uart->sendMotorCommand(CMD_FORWARD, speed);
-            Serial.print("↑ Moving forward, speed: ");
-            Serial.println(speed);
-            
-        } else if (distanceError < -distanceTolerance) {
-            uint8_t speed = 40;
-            uart->sendMotorCommand(CMD_BACKWARD, speed);
-            Serial.print("↓ Moving backward, speed: ");
-            Serial.println(speed);
+    // "Stop" moving if error is happily small (< 3cm)
+    else if (abs(distanceError) < 3) {
+        if (followingMotionActive) {
+            Log.println("→ Target reached, stopping.");
+            followingMotionActive = false;
         }
     }
-    //3: Stop
+
+    // 1: Rotation Adjustment (Independent of forward hysteresis)
+    if (abs(lateralError) > 18) {
+        uint8_t rotSpeed = 45; // Fixed moderate speed for rotation
+        if (lateralError > 0) {
+            uart->sendMotorCommand(CMD_RIGHT, rotSpeed);
+            Log.println("→ Adjusting course right");
+        } else {
+            uart->sendMotorCommand(CMD_LEFT, rotSpeed);
+            Log.println("← Adjusting course left");
+        }
+    } 
+    // 2: Distance Following (Only execute if motion is active)
+    else if (followingMotionActive) {
+        if (distanceError > 0) {
+            // Forward Ramp: Linear map from 3cm error to 60cm error
+            // Speed from a gentle nudge (35) to full power (100)
+            uint8_t speed = constrain(map(distanceError, 3, 60, 35, 100), 35, 100);
+            uart->sendMotorCommand(CMD_FORWARD, speed);
+            Log.print("↑ Following Forward, Speed: ");
+            Log.println(speed);
+            
+        } else {
+            // Backward nudge for gentle correction
+            uint8_t speed = 40;
+            uart->sendMotorCommand(CMD_BACKWARD, speed);
+            Log.print("↓ Reversing for space, Speed: ");
+            Log.println(speed);
+        }
+    }
+    // 3: Deadzone / Stop
     else {
         uart->sendMotorCommand(CMD_STOP, 0);
-        Serial.println("→ Maintaining distance");
     }
 }
 

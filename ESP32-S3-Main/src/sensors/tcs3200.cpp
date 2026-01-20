@@ -1,4 +1,5 @@
 #include "tcs3200.h"
+#include "../utils/logger.h"
 #include "../config/pins.h"
 #include "../config/constants.h"
 #include "../config/thresholds.h"
@@ -90,9 +91,9 @@ void ColorSensor::calibrate() {
     }
     ambientClear = (sumR + sumG + sumB) / (samples * 3);
     
-    Serial.println("ColorSensor calibrated");
-    Serial.print("Ambient clear value: ");
-    Serial.println(ambientClear);
+    Log.println("ColorSensor calibrated");
+    Log.print("Ambient clear value: ");
+    Log.println(ambientClear);
 }
 
 RGBColor ColorSensor::getRGB() {

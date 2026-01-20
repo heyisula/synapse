@@ -1,4 +1,5 @@
 #include "obstacle_avoidance.h"
+#include "../utils/logger.h"
 
 ObstacleAvoidance::ObstacleAvoidance(UltrasonicManager* us, MotionTracker* mt, 
                                      UARTProtocol* u, Display* d, Buzzer* b) {
@@ -77,21 +78,21 @@ void ObstacleAvoidance::update() {
         if (leftDistance > rightDistance && leftDistance > COLLISION_DISTANCE_SIDE) {
             // Left is clearer - Rotate Left
             uart->sendMotorCommand(CMD_ROTATE_LEFT, MOTOR_SPEED_MIN);
-            Serial.println("⟲ Path blocked - Rotating Left");
+            Log.println("⟲ Path blocked - Rotating Left");
         } 
         else if (rightDistance > leftDistance && rightDistance > COLLISION_DISTANCE_SIDE) {
             // Right is clearer - Rotate Right
             uart->sendMotorCommand(CMD_ROTATE_RIGHT, MOTOR_SPEED_MIN);
-            Serial.println("⟳ Path blocked - Rotating Right");
+            Log.println("⟳ Path blocked - Rotating Right");
         }
         else {
             // All paths ahead/sides blocked - Reverse
             if (canReverse()) {
                 uart->sendMotorCommand(CMD_BACKWARD, MOTOR_SPEED_MIN);
-                Serial.println("↓ Dead end - Reversing");
+                Log.println("↓ Dead end - Reversing");
             } else {
                 uart->sendEmergencyStop();
-                Serial.println("⚠ Fully trapped! Emergency Stop.");
+                Log.println("⚠ Fully trapped! Emergency Stop.");
             }
         }
     } 

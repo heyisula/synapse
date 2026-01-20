@@ -2,6 +2,7 @@
 #include "sensors/mpu6050.h"
 #include "config/pins.h"
 #include "config/constants.h"
+#include "utils/logger.h"
 
 MotionTracker::MotionTracker() : mpu(0x68) {
     accelX = accelY = accelZ = 0.0f;
@@ -23,8 +24,8 @@ bool MotionTracker::begin() {
     // Verify connection
     uint8_t whoami = mpu.getDeviceID();
     if (whoami != 0x68 && whoami != 0x34) { 
-        Serial.print("MPU6050 ID check failed: 0x");
-        Serial.println(whoami, HEX);
+        Log.print("MPU6050 ID check failed: 0x");
+        Log.println(whoami, HEX);
         return false;
     }
     
@@ -39,8 +40,8 @@ bool MotionTracker::begin() {
 
 
 void MotionTracker::autoCalibrate() {
-    Serial.println("Starting auto-calibration...");
-    Serial.println("Keep robot STILL and LEVEL for 3 seconds!");
+    Log.println("Starting auto-calibration...");
+    Log.println("Keep robot STILL and LEVEL for 3 seconds!");
     
     delay(1000);
     
@@ -48,7 +49,7 @@ void MotionTracker::autoCalibrate() {
     float sumAX = 0, sumAY = 0, sumGX = 0, sumGY = 0;
     float sumRoll = 0, sumPitch = 0;
     
-    Serial.println("Sampling accelerometer and tilt angles...");
+    Log.println("Sampling accelerometer and tilt angles...");
     
     for (int i = 0; i < samples; i++) {
         int16_t ax, ay, az, gx, gy, gz;
@@ -94,12 +95,12 @@ void MotionTracker::autoCalibrate() {
     pitch = 0.0f;
     roll = 0.0f;
     
-    Serial.println("Calibration complete!");
-    Serial.print("Accel X Offset: "); Serial.println(accelXOffset, 4);
-    Serial.print("Accel Y Offset: "); Serial.println(accelYOffset, 4);
-    Serial.print("Roll Offset: "); Serial.print(rollOffset, 2); Serial.println("°");
-    Serial.print("Pitch Offset: "); Serial.print(pitchOffset, 2); Serial.println("°");
-    Serial.println();
+    Log.println("Calibration complete!");
+    Log.print("Accel X Offset: "); Log.println(accelXOffset, 4);
+    Log.print("Accel Y Offset: "); Log.println(accelYOffset, 4);
+    Log.print("Roll Offset: "); Log.print(rollOffset, 2); Log.println("°");
+    Log.print("Pitch Offset: "); Log.print(pitchOffset, 2); Log.println("°");
+    Log.println();
 }
 
 void MotionTracker::update() {
@@ -232,9 +233,9 @@ void MotionTracker::getMotionData(float& acceleration, int& angular) {
     // Here we send the Angle in Degrees
     angular = ((int)round(roll))+4; // Small offset to calibrate level position
     
-    Serial.print("Motion - Accel: ");
-    Serial.print(acceleration, 2);
-    Serial.print(" m/s², Tilt Angle: ");
-    Serial.print(angular);
-    Serial.println("°");
+    Log.print("Motion - Accel: ");
+    Log.print(acceleration, 2);
+    Log.print(" m/s², Tilt Angle: ");
+    Log.print(angular);
+    Log.println("°");
 }

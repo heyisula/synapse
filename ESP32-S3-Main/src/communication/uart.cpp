@@ -1,6 +1,7 @@
 #include "uart.h"
 #include "../config/pins.h"
 #include "../config/constants.h"
+#include "../utils/logger.h"
 
 UARTProtocol::UARTProtocol() {
     serial = &Serial1;
@@ -25,10 +26,10 @@ void UARTProtocol::sendMotorCommand(MotorCommand cmd, uint8_t speed) {
     uint8_t speedValue = constrain(speed, 0, 100);
     
     // DEBUG: Visualize outgoing command
-    Serial.print("-> MOTOR_TX: Cmd ");
-    Serial.print(cmdValue);
-    Serial.print(" | Spd ");
-    Serial.println(speedValue);
+    Log.print("-> MOTOR_TX: Cmd ");
+    Log.print(cmdValue);
+    Log.print(" | Spd ");
+    Log.println(speedValue);
 
     // Put command and speed into distinct slots
 
