@@ -31,16 +31,18 @@ void MenuSystem::update() {
 
     encoder->update();
 
-    int pos = encoder->getPosition();
-    if (pos != 0) {
-        if (pos > 0) currentSelection++;
-        else currentSelection--;
+    int delta = encoder->getDelta();
+    if (delta != 0) {
+        currentSelection += delta;
         
-        // Wrap around
-        if (currentSelection < 0) currentSelection = maxMenuItems - 1;
-        if (currentSelection >= maxMenuItems) currentSelection = 0;
+        // Handle wrapping for arbitrary delta steps
+        while (currentSelection < 0) {
+            currentSelection += maxMenuItems;
+        }
+        while (currentSelection >= maxMenuItems) {
+            currentSelection -= maxMenuItems;
+        }
         
-        encoder->resetPosition();
         updateDisplay();
     }
 

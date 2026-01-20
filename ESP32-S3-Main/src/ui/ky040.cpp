@@ -1,92 +1,145 @@
 #include "ky040.h"
 #include "../config/pins.h"
 
+// State table could be used, but bit manipulation is also efficient.
 RotaryEncoder::RotaryEncoder() {
-    swPin = ROTARY_SW;
-    position = 0;
+    pinCLK = ROTARY_CLK;
+    pinDT = ROTARY_DT;
+    pinSW = ROTARY_SW;
+    
+    lastEncoded = 0;
+    encoderDelta = 0;
+    
+    buttonState = HIGH; // Input pullup defaults high
+    lastButtonState = HIGH;
     buttonPressed = false;
-    lastButtonTime = 0;
-    buttonPressStart = 0;
-    lastButtonState = false;
-    lastSwState = HIGH;
+    buttonReleased = false;
+    longPressActive = false;
+    
     lastDebounceTime = 0;
-    encoder = nullptr;
+    buttonPressTime = 0;
 }
 
 RotaryEncoder::~RotaryEncoder() {
-    if (encoder) {
-        delete encoder;
-    }
+    // modifying pins isn't really needed in destructor
 }
 
 void RotaryEncoder::begin() {
-    // Initialize pins
-    pinMode(ROTARY_CLK, INPUT_PULLUP);
-    pinMode(ROTARY_DT, INPUT_PULLUP);
-    pinMode(swPin, INPUT_PULLUP);
+    pinMode(pinCLK, INPUT_PULLUP);
+    pinMode(pinDT, INPUT_PULLUP);
+    pinMode(pinSW, INPUT_PULLUP);
     
-    encoder = new KY040(ROTARY_CLK, ROTARY_DT);
+    // Read initial state
+    int MSB = digitalRead(pinDT);
+    int LSB = digitalRead(pinCLK);
+    
+    // Combine to get 2-bit state (0-3)
+    lastEncoded = (MSB << 1) | LSB;
 }
 
 void RotaryEncoder::update() {
-    if (!encoder) return;
+    // --- 1. Encoder Logic (State Machine) ---
+    int MSB = digitalRead(pinDT);
+    int LSB = digitalRead(pinCLK);
+    int encoded = (MSB << 1) | LSB;
     
-    // Get rotation state and update position automatically
-    byte rotation = encoder->getRotation();
+    // Current state (encoded) and previous state (lastEncoded) form a 4-bit number
+    // sum = 0b[Old_MSB][Old_LSB][New_MSB][New_LSB]
+    int sum = (lastEncoded << 2) | encoded;
     
-    if (rotation == KY040::CLOCKWISE) {
-        position++;
-    } else if (rotation == KY040::COUNTERCLOCKWISE) {
-        position--;
+    // Verify validity using the "sum" transition
+    // Valid CW transitions: 0b0010 (2), 0b1011 (11), 0b1101 (13), 0b0100 (4)
+    // Valid CCW transitions: 0b0001 (1), 0b0111 (7), 0b1110 (14), 0b1000 (8)
+    
+    if (sum == 0b1101 || sum == 0b0100 || sum == 0b0010 || sum == 0b1011) {
+        encoderDelta++;
+    } else if (sum == 0b1110 || sum == 0b0111 || sum == 0b0001 || sum == 0b1000) {
+        encoderDelta--;
     }
-
-    int reading = digitalRead(swPin);
-    unsigned long currentTime = millis();
     
-    // Check if the button state has changed
-    if (reading != lastSwState) {
+    lastEncoded = encoded;
+
+    // --- 2. Button Logic (Non-blocking Debounce) ---
+    int reading = digitalRead(pinSW);
+    unsigned long currentTime = millis();
+
+    // Reset debounce timer if reading changed (noise or actual press)
+    if (reading != lastButtonState) {
         lastDebounceTime = currentTime;
     }
     
-    // Only register the change if it's been stable for the debounce delay
+    // Check if the state has been stable for the debounce delay
     if ((currentTime - lastDebounceTime) > DEBOUNCE_DELAY) {
-        // If the button state has actually changed
-        if (reading != (buttonPressed ? LOW : HIGH)) {
-            if (reading == LOW) {
-                // Button pressed
-                buttonPressed = true;
-                buttonPressStart = currentTime;
+        
+        // If the state has changed
+        if (reading != buttonState) {
+            buttonState = reading;
+            
+            // Logic: Button is Active LOW
+            if (buttonState == LOW) {
+                // Just Pressed
+                buttonPressTime = currentTime;
+                longPressActive = false; // Reset long press flag
+                // buttonPressed = true; // If we wanted press-trigger
             } else {
-                // Button released
-                buttonPressed = false;
+                // Just Released
+                // Only trigger release if it wasn't a long press
+                if (!longPressActive) {
+                    buttonReleased = true;
+                }
+            }
+        }
+        
+        // Update last stable state only after debounce confirmation? 
+        // Actually, we usually update lastButtonState immediately on change to sniff noise.
+        // But here we want the 'logic' state.
+        
+        // Handle Long Press while held down
+        if (buttonState == LOW && !longPressActive) {
+            if ((currentTime - buttonPressTime) > LONG_PRESS_DELAY) {
+                longPressActive = true;
+                // Force exit or action immediately on long press detection?
+                // Or leave it to the getter to check
             }
         }
     }
     
-    lastSwState = reading;
+    lastButtonState = reading;
 }
 
-int RotaryEncoder::getPosition() {
-    return position;
-}
-
-void RotaryEncoder::resetPosition() {
-    position = 0;
+int RotaryEncoder::getDelta() {
+    int d = encoderDelta;
+    encoderDelta = 0; // Reset after reading to consume the event
+    return d;
 }
 
 bool RotaryEncoder::isButtonPressed() {
-    return buttonPressed;
+    // Not using this for the menu, relying on release, but keeping for API drift
+    if (buttonPressed) {
+        buttonPressed = false;
+        return true;
+    }
+    return false;
 }
 
 bool RotaryEncoder::isButtonReleased() {
-    bool released = lastButtonState && !buttonPressed;
-    lastButtonState = buttonPressed;
-    return released;
+    if (buttonReleased) {
+        buttonReleased = false;
+        return true;
+    }
+    return false;
 }
 
 bool RotaryEncoder::isLongPress() {
-    if (buttonPressed) {
-        return (millis() - buttonPressStart) > 1000;
+    // We return true continuously or once? 
+    // Usually once is safer for menus.
+    if (longPressActive) {
+        // To prevent spamming long press, we can reset it, 
+        // OR we can rely on the caller to handle repeating.
+        // Let's make it return true ONCE per press-hold.
+        longPressActive = false; // Consume the event
+        // Also suppress the release event that will come later
+        return true;
     }
     return false;
 }
