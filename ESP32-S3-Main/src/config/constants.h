@@ -12,8 +12,8 @@
 #define SOUND_SPEED 0.034            // cm/microsecond
 
 // Battery Constants
-#define BATTERY_LOW_VOLTAGE 10.5     // V
-#define BATTERY_CRITICAL_VOLTAGE 10.0 // V
+#define BATTERY_LOW_VOLTAGE 12.5     // V (Approx 3.12V/cell - entering critical zone)
+#define BATTERY_CRITICAL_VOLTAGE 12.0 // V (Approx 3.0V/cell - empty)
 
 // Timing Constants
 #define SENSOR_READ_INTERVAL 50      // ms

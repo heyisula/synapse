@@ -31,11 +31,16 @@ float Battery::readVoltage() {
 int Battery::readPercentage() {
     float voltage = readVoltage();
 
-    if (voltage >= 12.6) return 100;
-    if (voltage <= 9.6) return 0;
+    // For 4S Li-ion (16.8V max), with 100k/33k divider, max readable is ~13.3V
+    // So anything >= 13.2V is considered 100% (saturated)
+    if (voltage >= 13.2) return 100;
+    if (voltage <= 12.0) return 0;
 
-    const float voltages[] = {12.6, 12.4, 12.2, 12.0, 11.8, 11.6, 11.4, 11.2, 11.0, 10.8, 9.6};
-    const int percentages[] = {100, 90, 80, 70, 60, 50, 40, 30, 20, 10, 0};
+    // Steep discharge curve for the readable region (13.2V down to 12.0V)
+    // This represents the bottom ~15-20% of the actual battery capacity
+    // but we map it to 0-100% for display utility (so it doesn't just jump 100->0)
+    const float voltages[] = {13.2, 13.0, 12.9, 12.8, 12.7, 12.6, 12.5, 12.4, 12.2, 12.0};
+    const int percentages[] = {100,  80,   70,   60,   50,   40,   30,   20,   10,   0};
     const int n = sizeof(voltages)/sizeof(voltages[0]);
 
     for (int i = 0; i < n - 1; i++) {
