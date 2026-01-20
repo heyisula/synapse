@@ -121,16 +121,16 @@ void ObstacleAvoidance::update() {
 
 void ObstacleAvoidance::updateSensorReadings() {
     // Distance readings
-    frontDistance = ultrasonicMgr->getDistance(US_FRONT);
-    rearDistance = ultrasonicMgr->getDistance(US_BACK);
-    leftDistance = ultrasonicMgr->getDistance(US_LEFT);
-    rightDistance = ultrasonicMgr->getDistance(US_RIGHT);
+    frontDistance = round(ultrasonicMgr->getDistance(US_FRONT));
+    rearDistance = round(ultrasonicMgr->getDistance(US_BACK));
+    leftDistance = round(ultrasonicMgr->getDistance(US_LEFT));
+    rightDistance = round(ultrasonicMgr->getDistance(US_RIGHT));
 
     // MPU6050 readings)
-    pitch = motionTracker->getPitch();  // Left/Right tilt
-    roll = motionTracker->getRoll();    // Front/Back tilt
-    accelX = motionTracker->getForwardAcceleration();
-    accelY = motionTracker->getSideAcceleration();
+    pitch = round(motionTracker->getPitch());  // Left/Right tilt
+    roll = round(motionTracker->getRoll() )+4;    // Front/Back tilt (Calibrated +3 deg)
+    accelX = round(motionTracker->getForwardAcceleration());
+    accelY = round(motionTracker->getSideAcceleration());
 }
 
 bool ObstacleAvoidance::checkFrontDistance() {
@@ -145,13 +145,13 @@ bool ObstacleAvoidance::checkRearDistance() {
 
 bool ObstacleAvoidance::checkGyroAccelThreshold() {
     // Check if tilt angles exceed safe limits
-    if (fabs(pitch) > STATIONARY_TILT_THRESHOLD || 
-        fabs(roll) > STATIONARY_TILT_THRESHOLD) {
+    if (fabs(roll) > STATIONARY_TILT_THRESHOLD) {
         return true;
     }
 
     // Check if acceleration is excessive (sudden impact/collision)
-    if (fabs(accelX) > 0.5f || fabs(accelY) > 0.5f) {
+    // Note: AccelX (Forward/Back) removed due to noise
+    if (fabs(accelY) > 0.5f) {
         return true;
     }
 
@@ -160,9 +160,7 @@ bool ObstacleAvoidance::checkGyroAccelThreshold() {
 
 bool ObstacleAvoidance::checkIfStationary() {
     // Check if robot is stationary based on gyro and tilt
-    if (fabs(pitch) < STATIONARY_GYRO_THRESHOLD && 
-        fabs(roll) < STATIONARY_GYRO_THRESHOLD &&
-        fabs(accelX) < 0.1f && 
+    if (fabs(roll) < STATIONARY_GYRO_THRESHOLD &&
         fabs(accelY) < 0.1f) {
         stationaryCount++;
         if (stationaryCount >= STATIONARY_COUNT_THRESHOLD) {

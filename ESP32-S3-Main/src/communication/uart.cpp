@@ -8,15 +8,19 @@ UARTProtocol::UARTProtocol() {
     lastSentCommand = CMD_STOP;
     isWaitingForAck = false;
     lastAckTime = 0;
+    initialized = false;
 }
 
 void UARTProtocol::begin() {
     serial->begin(UART_BAUD_RATE, SERIAL_8N1, UART_RX, UART_TX);
     transfer.begin(*serial);
+    initialized = true;
 }
 
 
 void UARTProtocol::sendMotorCommand(MotorCommand cmd, uint8_t speed) {
+    if (!initialized) return;
+
     uint8_t cmdValue = (uint8_t)cmd;
     uint8_t speedValue = constrain(speed, 0, 100);
 

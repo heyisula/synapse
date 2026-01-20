@@ -3,13 +3,13 @@
 
 // Environmental Thresholds
 #define TEMP_MIN 20.0                // °C
-#define TEMP_MAX 25.0                // °C
+#define TEMP_MAX 35.0                // °C
 #define HUMIDITY_MIN 40.0            // %
-#define HUMIDITY_MAX 60.0            // %
+#define HUMIDITY_MAX 90.0            // %
 #define HYSTERESIS_TEMP 0.5          // °C
 #define HYSTERESIS_HUMIDITY 2.0      // %
-#define LIGHT_MIN 200                // Lux
-#define LIGHT_MAX 800                // Lux
+#define LIGHT_MIN 100                // Lux
+#define LIGHT_MAX 1000                // Lux
 
 // Color Sensor Thresholds
 #define BLACK_SUM_MAX 30

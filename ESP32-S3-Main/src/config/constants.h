@@ -16,8 +16,8 @@
 #define BATTERY_CRITICAL_VOLTAGE 12.0 // V (Approx 3.0V/cell - empty)
 
 // Timing Constants
-#define SENSOR_READ_INTERVAL 50      // ms
-#define DISPLAY_UPDATE_INTERVAL 100  // ms
+#define SENSOR_READ_INTERVAL 20      // ms
+#define DISPLAY_UPDATE_INTERVAL 50  // ms
 #define HEARTBEAT_INTERVAL 1000      // ms
 
 // Motor Speed Constants

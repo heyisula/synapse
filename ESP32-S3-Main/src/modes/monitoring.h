@@ -81,8 +81,8 @@ private:
     bool spo2AlertActive;
     
     // Configuration
-    const unsigned long MONITORING_INTERVAL = 1000;  // 1 second
-    const unsigned long DISPLAY_INTERVAL = 500;       // 0.5 seconds
+    const unsigned long MONITORING_INTERVAL = 200;  // 0.2 second
+    const unsigned long DISPLAY_INTERVAL = 200;       // 0.2 seconds
     const unsigned long CALIBRATION_TIME = 5000;      // 5 seconds
     const unsigned long ALERT_TIMEOUT = 30000;        // 30 seconds
     const unsigned long DATA_STORE_INTERVAL = 5000;   // 5 seconds

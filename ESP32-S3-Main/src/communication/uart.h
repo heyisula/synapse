@@ -26,6 +26,7 @@ private:
     MotorCommand lastSentCommand;
     bool isWaitingForAck;
     unsigned long lastAckTime;
+    bool initialized;
 
 public:
     UARTProtocol();

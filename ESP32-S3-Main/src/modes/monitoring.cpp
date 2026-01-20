@@ -187,7 +187,7 @@ void MonitoringSystem::readPatientVitals() {
     
     currentData.heartRate = heartSensor->getHeartRate();
     currentData.spO2 = heartSensor->getSpO2();
-    currentData.bodyTemp = heartSensor->getTemperature();
+    // Body Temp removed as per request
     currentData.fingerDetected = heartSensor->isFingerDetected();
     currentData.vitalsValid = heartSensor->isValid();
     
@@ -196,9 +196,7 @@ void MonitoringSystem::readPatientVitals() {
         Serial.print(currentData.heartRate);
         Serial.print(" bpm | SpO2: ");
         Serial.print(currentData.spO2);
-        Serial.print("% | Temp: ");
-        Serial.print(currentData.bodyTemp);
-        Serial.println("°C");
+        Serial.println("%");
     }
 }
 
@@ -208,8 +206,7 @@ void MonitoringSystem::readEnvironment() {
     
     currentData.ambientTemp = envSensor->getTemperature();
     currentData.humidity = envSensor->getHumidity();
-    currentData.lightLevel = (lightSensor->getLightLevel(LDR_PATH_L) + 
-                             lightSensor->getLightLevel(LDR_PATH_R)) / 2;
+    currentData.lightLevel = lightSensor->getPathLightLevel();
     
     currentData.environmentValid = !isnan(currentData.ambientTemp) && 
                                   !isnan(currentData.humidity);

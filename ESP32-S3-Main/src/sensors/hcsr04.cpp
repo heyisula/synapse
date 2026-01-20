@@ -41,7 +41,7 @@ void UltrasonicManager::begin() {
 void UltrasonicManager::update() {
     unsigned long currentTime = millis();
     
-    if (currentTime - lastSensorReadTime >= 60) {
+    if (currentTime - lastSensorReadTime >= 30) {
         // Read current sensor
         unsigned int rawDistance = sensors[currentSensorIndex]->ping_cm();
         

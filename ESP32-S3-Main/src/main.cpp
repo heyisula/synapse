@@ -267,7 +267,6 @@ void loop() {
 
     // Mode Execution Logic based on Menu Selection
     MenuState currentState = menu->getCurrentState();
-
     // COMMUNICATION FAILSAFE: SKIPPED FOR DEBUG
     // if (currentState != MAIN_MENU && currentState != SYSTEM_INFO && !uart.isConnected()) {
     //     static unsigned long lastCommWarning = 0;
@@ -279,10 +278,74 @@ void loop() {
     //     return; // Don't execute movement modes if disconnected
     // }
 
+    static MenuState lastState = MAIN_MENU;
+    static bool modeInitialized = false;
+
+    // Handle Mode Transitions
+    if (currentState != lastState) {
+        // Stop the PREVIOUS mode
+        switch (lastState) {
+            case ASSISTANT_MODE:
+                assistant->setFollowingMode(false);
+                break;
+            case MONITORING_MENU:
+                monitoring->stopMonitoring();
+                break;
+            case LINE_FOLLOWING:
+                lineFollower->stop();
+                break;
+            case OBSTACLE_AVOIDANCE_MODE:
+                uart.sendMotorCommand(CMD_STOP, 0); // Ensure motors stop
+                break;
+            default: break;
+        }
+        
+        lastState = currentState;
+        modeInitialized = false; // Flag to Initialize the NEW mode
+        
+        // If returned to Main Menu, ensure display is refreshed 
+        // (in case stop() methods wrote to screen)
+        if (currentState == MAIN_MENU) {
+             menu->updateDisplay();
+        }
+    }
+
     // Check for Splash Screen status
     // If splash is active (first 2 seconds of mode), SKIP mode execution.
     // The MenuSystem displays the "Running..." screen during this time.
     if (!menu->shouldShowSplash()) {
+        
+        // Initialize the NEW mode (Runs once after splash finishes)
+        if (!modeInitialized && currentState != MAIN_MENU) {
+             switch (currentState) {
+                case ASSISTANT_MODE:
+                    assistant->setFollowingMode(true);
+                    // Ensure color sensor is ready
+                    colorSensor.update(); 
+                    break;
+                case MONITORING_MENU:
+                    // Calibrate sensors if needed before starting
+                    // monitoring->calibrateSensors(); // Optional: Uncomment if auto-calibration desired
+                    monitoring->startMonitoring();
+                    // Force initial read
+                    heartRate.update();
+                    environmental.update();
+                    break;
+                case LINE_FOLLOWING:
+                    lineFollower->start();
+                    // Reset errors
+                    lineSensor.update();
+                    break;
+                case OBSTACLE_AVOIDANCE_MODE:
+                    // Ensure fresh sensor data for safety check immediately
+                    ultrasonic.update();
+                    motion.update();
+                    break;
+                default: break;
+            }
+            modeInitialized = true;
+        }
+    
         switch (currentState) {
             case MAIN_MENU:
                 break;

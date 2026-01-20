@@ -230,7 +230,7 @@ void MotionTracker::getMotionData(float& acceleration, int& angular) {
     // User requested "Robots Left and Right Angle" (Roll)
     // Positive Roll = Tilt Right (usually), depends on atan2 sign
     // Here we send the Angle in Degrees
-    angular = ((int)round(roll))+3; // Small offset to calibrate level position
+    angular = ((int)round(roll))+4; // Small offset to calibrate level position
     
     Serial.print("Motion - Accel: ");
     Serial.print(acceleration, 2);
