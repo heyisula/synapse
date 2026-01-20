@@ -10,10 +10,6 @@ private:
     uint8_t leftBrightness;
     uint8_t rightBrightness;
     
-    // State tracking to prevent log spam
-    uint8_t lastLeftPWM;
-    uint8_t lastRightPWM;
-
 public:
     LEDArray();
     void begin();

@@ -65,10 +65,10 @@ int Battery::getVoltageInt() {
     return voltageMillivolts;
 }
 
-void Battery::getBatteryData(int& battery, float& voltage) {
+void Battery::getBatteryData(int& battery, int& voltage) {
     float voltageFloat = readVoltage();
     
-    voltage = voltageFloat; // Return actual float value (e.g. 13.3)
+    voltage = (int)round(voltageFloat * 1000.0f);
 
     battery = readPercentage();  
 
@@ -77,6 +77,6 @@ void Battery::getBatteryData(int& battery, float& voltage) {
     Serial.print("Battery - Level: ");
     Serial.print(battery);
     Serial.print("%, Voltage: ");
-    Serial.print(voltage, 2);
+    Serial.print(voltage / 1000.0f, 2);
     Serial.println("V");
 }

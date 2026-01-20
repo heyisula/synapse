@@ -6,10 +6,10 @@
 
 struct FirebaseTxData {
     // Sensor readings - SEND ONLY
-    float acceleration;           // Send acceleration
+    int acceleration;           // Send acceleration
     int angular;               // Send angular velocity
     int battery;               // Send battery level
-    float voltage;             // Send voltage
+    int voltage;               // Send voltage
     int temp;                  // Send temperature
     int humidity;              // Send humidity
     int lightlevel;            // Send light amount from path LDRs

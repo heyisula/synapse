@@ -13,10 +13,10 @@ void FirebaseManager::begin(const char* apiKey,
     auth.user.email = userEmail;
     auth.user.password = userPassword;
 
-    // Non-blocking initialization - authentication happens asynchronously
     Firebase.begin(&config, &auth);
     Firebase.reconnectWiFi(true);
 
+    Serial.println("Firebase Connected!");
     initialized = true;
 }
 bool FirebaseManager::ready() {

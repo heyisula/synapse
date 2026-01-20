@@ -6,8 +6,6 @@ LEDArray::LEDArray() {
     rightPin = LED_RIGHT;
     leftBrightness = 0;
     rightBrightness = 0;
-    lastLeftPWM = 255; // Force initial update
-    lastRightPWM = 255;
 }
 
 void LEDArray::begin() {
@@ -54,34 +52,27 @@ void LEDArray::controlFromFirebase(int lightadj_left, int lightadj_right) {
     if (lightadj_right > 0) {
         rightPWM = map(lightadj_right, 1, 100, 1, 255);
     }
-
-    // Only update and log if changed
-    if (leftPWM != lastLeftPWM || rightPWM != lastRightPWM) {
-        leftBrightness = leftPWM;
-        rightBrightness = rightPWM;
-        
-        analogWrite(leftPin, leftPWM);
-        analogWrite(rightPin, rightPWM);
-        
-        lastLeftPWM = leftPWM;
-        lastRightPWM = rightPWM;
-
-        // Log brightness changes
-        Serial.println("┌─────────────────────────");
-        Serial.print("│ LED Brightness Control:");
-        Serial.println();
-        Serial.print("│   Left:  ");
-        Serial.print(lightadj_left);
-        Serial.print("% (PWM: ");
-        Serial.print(leftPWM);
-        Serial.print(") ");
-        Serial.println(leftPWM == 0 ? "OFF" : "ON");
-        Serial.print("│   Right: ");
-        Serial.print(lightadj_right);
-        Serial.print("% (PWM: ");
-        Serial.print(rightPWM);
-        Serial.print(") ");
-        Serial.println(rightPWM == 0 ? "OFF" : "ON");
-        Serial.println("└─────────────────────────");
-    }
+    leftBrightness = leftPWM;
+    rightBrightness = rightPWM;
+    
+    analogWrite(leftPin, leftPWM);
+    analogWrite(rightPin, rightPWM);
+    
+    // Log brightness changes
+    Serial.println("┌─────────────────────────");
+    Serial.print("│ LED Brightness Control:");
+    Serial.println();
+    Serial.print("│   Left:  ");
+    Serial.print(lightadj_left);
+    Serial.print("% (PWM: ");
+    Serial.print(leftPWM);
+    Serial.print(") ");
+    Serial.println(leftPWM == 0 ? "OFF" : "ON");
+    Serial.print("│   Right: ");
+    Serial.print(lightadj_right);
+    Serial.print("% (PWM: ");
+    Serial.print(rightPWM);
+    Serial.print(") ");
+    Serial.println(rightPWM == 0 ? "OFF" : "ON");
+    Serial.println("└─────────────────────────");
 }

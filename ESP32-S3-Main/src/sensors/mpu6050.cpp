@@ -121,18 +121,13 @@ void MotionTracker::update() {
     float gyro_y_raw = gy / 131.0f;
 
     // Remap axes for your sensor orientation
-    // User Spec: +X forward, +Y left
-    // We use a body frame where X=Forward, Y=Left, Z=Up
-    float ax_robot = accel_x; 
-    float ay_robot = accel_y; // +Y is Left
+    // Your sensor: +X forward, +Y left (so negate for right-positive)
+    float ax_robot = accel_x; //-accelXOffset Removed
+    float ay_robot = -accel_y; //-accelYOffset Removed
     float az_robot = accel_z;
     
-    // Gyro Axes: 
-    // Rotation around X (Forward) is Roll Rate.
-    // Rotation around Y (Left) is Pitch Rate.
-    // Rotation around Z (Up) is Yaw Rate.
     float gyroX_robot = gyro_x_raw - gyroXOffset;
-    float gyroY_robot = gyro_y_raw - gyroYOffset; 
+    float gyroY_robot = -gyro_y_raw - gyroYOffset;     // Pitch rate
 
     // Apply deadbands
     accelX = (fabs(ax_robot) < ACCEL_DEADBAND) ? 0.0f : ax_robot;
@@ -143,26 +138,18 @@ void MotionTracker::update() {
     gyroY = (fabs(gyroY_robot) < GYRO_DEADBAND) ? 0.0f : gyroY_robot;
     
     // Calculate tilt from accelerometer
-    // Pitch (Nose Up/Down): Rotation around Y axis. Depends on X-axis Gravity.
-    // +X is Forward. Nose Up -> +X sees +g component? (Depends on sensor). 
-    // Usually Pitch = atan2(accelX, accelZ).
-    float pitchAcc = atan2(ax_robot, az_robot) * RAD_TO_DEG - pitchOffset;       
+    float pitchAcc = atan2(accelY, accelZ) * RAD_TO_DEG - pitchOffset;
+    float rollAcc = atan2(-accelX, accelZ) * RAD_TO_DEG - rollOffset;
 
-    // Roll (Left/Right Tilt): Rotation around X axis. Depends on Y-axis Gravity.
-    // +Y is Left. Left Wing Down -> +Y sees +g component.
-    float rollAcc = atan2(ay_robot, az_robot) * RAD_TO_DEG - rollOffset;
-
-    // Complementary Filter
-    // Pitch rate is around Y axis.
     pitch += gyroY * dt;
-    // Roll rate is around X axis.
     roll += gyroX * dt;
 
     pitch = MPU_ALPHA * pitch + (1.0f - MPU_ALPHA) * pitchAcc;
     roll = MPU_ALPHA * roll + (1.0f - MPU_ALPHA) * rollAcc;
 
-    forwardAccel = ax_robot - sin(pitch * DEG_TO_RAD); // Remove gravity from Forward
-    sideAccel = ay_robot - sin(roll * DEG_TO_RAD);     // Remove gravity from Side
+    forwardAccel = accelX - sin(roll * DEG_TO_RAD);
+    sideAccel = accelY - sin(pitch * DEG_TO_RAD);
+
 }
 
 float MotionTracker::getPitch() {
@@ -218,23 +205,21 @@ int MotionTracker::getAngularVelocityInt() {
     return angular;
 }
 
-void MotionTracker::getMotionData(float& acceleration, int& angular) {
+void MotionTracker::getMotionData(int& acceleration, int& angular) {
     update();
     
     float accelMagnitude = getAccelMagnitude();
     float accelMS2 = accelMagnitude * 9.81f;
+    acceleration = (int)round(accelMS2 * 100.0f);
     
-    // Return acceleration in m/s² (float), rounded to 1 decimal place
-    acceleration = (round(accelMS2 * 10.0f) / 10.0f)-11.2f; // Subtract gravity offset for stationary
-    
-    // User requested "Robots Left and Right Angle" (Roll)
-    // Positive Roll = Tilt Right (usually), depends on atan2 sign
-    // Here we send the Angle in Degrees
-    angular = ((int)round(roll))+3; // Small offset to calibrate level position
+    float angularVelocity = gyroX;
+    angular = (int)round(angularVelocity);
     
     Serial.print("Motion - Accel: ");
-    Serial.print(acceleration, 2);
-    Serial.print(" m/s², Tilt Angle: ");
+    Serial.print(acceleration);
+    Serial.print(" (");
+    Serial.print(accelMS2, 2);
+    Serial.print(" m/s²), Angular: ");
     Serial.print(angular);
-    Serial.println("°");
+    Serial.println("°/s");
 }
