@@ -18,7 +18,11 @@ MenuSystem::MenuSystem(Display* disp, Buzzer* bz, RotaryEncoder* enc, AutomaticL
     settings.temperature = 0.0f;
     settings.humidity = 0.0f;
     settings.currentSpeed = 0;
+    settings.currentSpeed = 0;
     settings.wifiConnected = false;
+    
+    splashStartTime = 0;
+    isSplashActive = false;
 }
 
 void MenuSystem::begin() {
@@ -69,6 +73,18 @@ void MenuSystem::select() {
                     maxMenuItems = 2; 
                     break;
         }
+        
+        // Start Splash Screen if we moved OUT of Main Menu (and not into a submenu like AutoLighting which is handled differently? 
+        // Logic: specific modes (Assistant, Monitoring, Obs, Line) need splash.
+        // AutoLighting Submenu (5) is a submenu, not a "Running" mode yet.
+        // System Info (4) is a static screen.
+        
+        if (currentMenu == ASSISTANT_MODE || currentMenu == MONITORING_MENU || 
+            currentMenu == OBSTACLE_AVOIDANCE_MODE || currentMenu == LINE_FOLLOWING) {
+            splashStartTime = millis();
+            isSplashActive = true;
+        }
+        
     } else if (currentMenu == AUTO_LIGHTING_SUBMENU) {
         if (currentSelection == 0) {
             autoLighting->start();
@@ -240,4 +256,17 @@ bool MenuSystem::isActive() {
 void MenuSystem::enter() {
     inMenu = true;
     updateDisplay();
+}
+
+bool MenuSystem::shouldShowSplash() {
+    if (isSplashActive) {
+        if (millis() - splashStartTime < 2000) {
+            return true;
+        } else {
+            isSplashActive = false; // Splash finished
+            updateDisplay();        // Refresh to show actual mode content
+            return false;
+        }
+    }
+    return false;
 }

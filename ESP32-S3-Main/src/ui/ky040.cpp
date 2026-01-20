@@ -1,27 +1,46 @@
 #include "ky040.h"
 #include "../config/pins.h"
 
-// State table could be used, but bit manipulation is also efficient.
+// Pointer to the instance for the ISR
+static RotaryEncoder* isrInstance = nullptr;
+
+// Interrupt Service Routine
+void IRAM_ATTR encoderISR() {
+    if (isrInstance) {
+        isrInstance->handleISR();
+    }
+}
+
+// Full Step Lookup Table
+// This table is designed to handle full quadrature transitions.
+// Index = (old_state << 2) | new_state
+// We only care about pin states (2 bits).
+const int8_t KNOWN_STATES[] = {0, -1, 1, 0, 1, 0, 0, -1, -1, 0, 0, 1, 0, 1, -1, 0};
+
 RotaryEncoder::RotaryEncoder() {
     pinCLK = ROTARY_CLK;
     pinDT = ROTARY_DT;
     pinSW = ROTARY_SW;
     
-    lastEncoded = 0;
+    state = 0;
     encoderDelta = 0;
     
-    buttonState = HIGH; // Input pullup defaults high
-    lastButtonState = HIGH;
+    buttonActiveLow = true; 
+    buttonState = false;    
     buttonPressed = false;
     buttonReleased = false;
-    longPressActive = false;
+    longPressDetected = false;
+    ignoreNextRelease = false;
     
     lastDebounceTime = 0;
     buttonPressTime = 0;
+    
+    isrInstance = this;
 }
 
 RotaryEncoder::~RotaryEncoder() {
-    // modifying pins isn't really needed in destructor
+    detachInterrupt(digitalPinToInterrupt(pinCLK));
+    detachInterrupt(digitalPinToInterrupt(pinDT));
 }
 
 void RotaryEncoder::begin() {
@@ -29,92 +48,126 @@ void RotaryEncoder::begin() {
     pinMode(pinDT, INPUT_PULLUP);
     pinMode(pinSW, INPUT_PULLUP);
     
-    // Read initial state
-    int MSB = digitalRead(pinDT);
-    int LSB = digitalRead(pinCLK);
+    // Initial state
+    uint8_t p1 = digitalRead(pinDT);
+    uint8_t p2 = digitalRead(pinCLK);
+    state = (p1 << 1) | p2;
     
-    // Combine to get 2-bit state (0-3)
-    lastEncoded = (MSB << 1) | LSB;
+    // Attach Interrupts to BOTH pins for maximum resolution
+    attachInterrupt(digitalPinToInterrupt(pinCLK), encoderISR, CHANGE);
+    attachInterrupt(digitalPinToInterrupt(pinDT), encoderISR, CHANGE);
+}
+
+void IRAM_ATTR RotaryEncoder::handleISR() {
+    uint8_t p1 = digitalRead(pinDT);
+    uint8_t p2 = digitalRead(pinCLK);
+    
+    uint8_t currentState = (p1 << 1) | p2;
+    uint8_t transition = (state << 2) | currentState;
+    
+    // Using a lookup table is faster and cleaner for ISR
+    encoderDelta += KNOWN_STATES[transition & 0x0F];
+    
+    state = currentState;
 }
 
 void RotaryEncoder::update() {
-    // --- 1. Encoder Logic (State Machine) ---
-    int MSB = digitalRead(pinDT);
-    int LSB = digitalRead(pinCLK);
-    int encoded = (MSB << 1) | LSB;
+    // Button Logic (Non-blocking Debounce) stays in update()
+    // because millis() inside ISR is frowned upon (though works on ESP32 usually)
+    // and button events don't need microsecond latency.
     
-    // Current state (encoded) and previous state (lastEncoded) form a 4-bit number
-    // sum = 0b[Old_MSB][Old_LSB][New_MSB][New_LSB]
-    int sum = (lastEncoded << 2) | encoded;
+    bool rawReading = (digitalRead(pinSW) == LOW); 
     
-    // Verify validity using the "sum" transition
-    // Valid CW transitions: 0b0010 (2), 0b1011 (11), 0b1101 (13), 0b0100 (4)
-    // Valid CCW transitions: 0b0001 (1), 0b0111 (7), 0b1110 (14), 0b1000 (8)
-    
-    if (sum == 0b1101 || sum == 0b0100 || sum == 0b0010 || sum == 0b1011) {
-        encoderDelta++;
-    } else if (sum == 0b1110 || sum == 0b0111 || sum == 0b0001 || sum == 0b1000) {
-        encoderDelta--;
-    }
-    
-    lastEncoded = encoded;
-
-    // --- 2. Button Logic (Non-blocking Debounce) ---
-    int reading = digitalRead(pinSW);
-    unsigned long currentTime = millis();
-
-    // Reset debounce timer if reading changed (noise or actual press)
-    if (reading != lastButtonState) {
-        lastDebounceTime = currentTime;
-    }
-    
-    // Check if the state has been stable for the debounce delay
-    if ((currentTime - lastDebounceTime) > DEBOUNCE_DELAY) {
-        
-        // If the state has changed
-        if (reading != buttonState) {
-            buttonState = reading;
+    if (rawReading != buttonState) {
+        if (millis() - lastDebounceTime > DEBOUNCE_DELAY) {
+            buttonState = rawReading;
+            lastDebounceTime = millis();
             
-            // Logic: Button is Active LOW
-            if (buttonState == LOW) {
-                // Just Pressed
-                buttonPressTime = currentTime;
-                longPressActive = false; // Reset long press flag
-                // buttonPressed = true; // If we wanted press-trigger
+            if (buttonState == true) {
+                // PRESSED
+                buttonPressed = true;
+                buttonPressTime = millis();
+                longPressDetected = false; // Reset flag
+                
+                // IMPORTANT: If we are already in a long-press state from *before*, 
+                // we should have cleared it. This is a fresh press.
+                ignoreNextRelease = false; 
+                
             } else {
-                // Just Released
-                // Only trigger release if it wasn't a long press
-                if (!longPressActive) {
+                // RELEASED
+                // If we detected a long press during the hold, do NOT trigger release
+                if (!ignoreNextRelease) {
                     buttonReleased = true;
                 }
             }
         }
-        
-        // Update last stable state only after debounce confirmation? 
-        // Actually, we usually update lastButtonState immediately on change to sniff noise.
-        // But here we want the 'logic' state.
-        
-        // Handle Long Press while held down
-        if (buttonState == LOW && !longPressActive) {
-            if ((currentTime - buttonPressTime) > LONG_PRESS_DELAY) {
-                longPressActive = true;
-                // Force exit or action immediately on long press detection?
-                // Or leave it to the getter to check
+    } else {
+        // State is stable. Check for Long Press.
+        if (buttonState == true && !longPressDetected) {
+            if (millis() - buttonPressTime > LONG_PRESS_DELAY) {
+                longPressDetected = true;
+                ignoreNextRelease = true; // SUPPRESS the future release event
             }
         }
     }
-    
-    lastButtonState = reading;
 }
 
 int RotaryEncoder::getDelta() {
+    // Atomic read and reset
+    noInterrupts();
     int d = encoderDelta;
-    encoderDelta = 0; // Reset after reading to consume the event
-    return d;
+    encoderDelta = 0;
+    interrupts();
+    
+    // Optional: Divisor if it's too sensitive (2 ticks per step)
+    // The user said "not changing for EACH tick", implying it was too slow/insensitive.
+    // So we return raw delta. However, KY-040 often does 2 transitions per click.
+    // If d is 2, and we want 1 step.
+    
+    // Logic: If user complains of "no responsiveness", raw is safer. 
+    // They can filter in menu if it's too fast.
+    // But usually, 1 physical click = 2 or 4 ISR steps.
+    // Let's return d / 2 for standard KY-040 feel, BUT
+    // the user insists on responsiveness.
+    // Let's try 1:1 first. If it double-jumps, that's better than no-jumping.
+    // Actually, let's implement the classic "divide by 2" signal because 
+    // real detents usually span a full quadrature cycle (4) or half (2).
+    
+    // REVISION: User said "not responding to EACH tick".
+    // This implies they turn it, click, and nothing happens.
+    // This means we were MISSING counts.
+    // So we should return the raw accumulation, or maybe / 2 if we are sure.
+    // Let's return d / 2 but only if d >= 2.
+    
+    if (d != 0) {
+        // Standard KY-040 has 2 signal changes per detent.
+        // So raw 'd' will be 2 or -2 per click.
+        // If we return 2, the menu jumps 2 items.
+        // We probably want to return d / 2.
+        
+        // Simple software divisor
+        // return d / 2; 
+        
+        // But what if we only got 1? (half turn).
+        // If we integer divide 1/2 = 0, we lose it.
+        // Let's use a static accumulator for the fractional part?
+        // No, let's just return d and let the menu handle it? 
+        // No, menu expects +1/-1 usually.
+        
+        // Let's go with: Only trigger on even counts.
+        static int remainder = 0;
+        int total = d + remainder;
+        
+        int steps = total / 2; 
+        remainder = total % 2;
+        
+        return steps;
+    }
+    
+    return 0;
 }
 
 bool RotaryEncoder::isButtonPressed() {
-    // Not using this for the menu, relying on release, but keeping for API drift
     if (buttonPressed) {
         buttonPressed = false;
         return true;
@@ -131,14 +184,8 @@ bool RotaryEncoder::isButtonReleased() {
 }
 
 bool RotaryEncoder::isLongPress() {
-    // We return true continuously or once? 
-    // Usually once is safer for menus.
-    if (longPressActive) {
-        // To prevent spamming long press, we can reset it, 
-        // OR we can rely on the caller to handle repeating.
-        // Let's make it return true ONCE per press-hold.
-        longPressActive = false; // Consume the event
-        // Also suppress the release event that will come later
+    if (longPressDetected) {
+        longPressDetected = false; // Consume it
         return true;
     }
     return false;

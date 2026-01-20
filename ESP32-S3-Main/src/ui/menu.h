@@ -42,6 +42,10 @@ private:
     int maxMenuItems;
     bool inMenu;
     
+    // Splash screen Transition
+    unsigned long splashStartTime;
+    bool isSplashActive;
+    
     void displayMainMenuItems();
     void displayAssistantMode();
     void displayLineFollowing();
@@ -61,6 +65,7 @@ public:
     void select();
     bool isActive();
     void updateDisplay();
+    bool shouldShowSplash();
     
     void getBatteryLevel(int level);
     void getWifiStatus(bool connected);

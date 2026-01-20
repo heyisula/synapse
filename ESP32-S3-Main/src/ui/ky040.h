@@ -7,41 +7,42 @@ class RotaryEncoder {
 private:
     uint8_t pinCLK;
     uint8_t pinDT;
-    uint8_t pinSW;
-
     // Encoder state variables
-    uint8_t lastEncoded;
-    volatile int16_t encoderDelta; // Using volatile for potential interrupt safety/atomicity
+    volatile uint8_t state;           
+    volatile int encoderDelta; 
 
     // Button state variables
-    bool buttonState;        // Current stable state
-    bool lastButtonState;    // Previous stable state
-    bool buttonPressed;      // Flag for "just pressed" event (if needed)
-    bool buttonReleased;     // Flag for "just released" event (which we want)
-    bool longPressActive;
+    uint8_t pinSW;
+    bool buttonActiveLow;
+    bool buttonState;        
+    bool buttonPressed;      
+    bool buttonReleased;     
+    bool longPressDetected;  
+    bool ignoreNextRelease;  
     
     unsigned long lastDebounceTime;
     unsigned long buttonPressTime;
     
     // Constants
-    static const unsigned long DEBOUNCE_DELAY = 20; // Fast debounce
-    static const unsigned long LONG_PRESS_DELAY = 1000;
+    static const unsigned long DEBOUNCE_DELAY = 50; 
+    static const unsigned long LONG_PRESS_DELAY = 800; // Faster long press (0.8s)
 
 public:
     RotaryEncoder();
     ~RotaryEncoder();
     
     void begin();
-    void update();
+    void update(); // Still needed for button polling
     
-    // Returns the change in position since last call (can be +ve or -ve)
-    // Automatically resets delta to 0 after reading.
+    // ISR for Encoder Rotation
+    void IRAM_ATTR handleISR();
+
     int getDelta();
     
-    // Button events
-    bool isButtonPressed();    // Returns true once per press (on rising edge of press)
-    bool isButtonReleased();   // Returns true once per release
-    bool isLongPress();        // Returns true if held for long press duration
+    bool isButtonPressed();    
+    bool isButtonReleased();   
+    bool isLongPress();        
+
 };
 
 #endif

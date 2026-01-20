@@ -279,36 +279,41 @@ void loop() {
     //     return; // Don't execute movement modes if disconnected
     // }
 
-    switch (currentState) {
-        case MAIN_MENU:
-            break;
-            
-        case ASSISTANT_MODE:
-            assistant->update();
-            break;
-            
-        case MONITORING_MENU:
-            monitoring->update();
-            break;
-            
-        case OBSTACLE_AVOIDANCE_MODE:
-            obstacleAvoid->update();
-            break;
-            
-        case LINE_FOLLOWING:
-            if (lineFollower->isLineDetected()) {
-                lineFollower->update();
-            }
-            break;
-            
-        case SYSTEM_INFO:
-            break;
-            
-        case AUTO_LIGHTING_SUBMENU:
-            break;
-            
-        default:
-            break;
+    // Check for Splash Screen status
+    // If splash is active (first 2 seconds of mode), SKIP mode execution.
+    // The MenuSystem displays the "Running..." screen during this time.
+    if (!menu->shouldShowSplash()) {
+        switch (currentState) {
+            case MAIN_MENU:
+                break;
+                
+            case ASSISTANT_MODE:
+                assistant->update();
+                break;
+                
+            case MONITORING_MENU:
+                monitoring->update();
+                break;
+                
+            case OBSTACLE_AVOIDANCE_MODE:
+                obstacleAvoid->update();
+                break;
+                
+            case LINE_FOLLOWING:
+                if (lineFollower->isLineDetected()) {
+                    lineFollower->update();
+                }
+                break;
+                
+            case SYSTEM_INFO:
+                break;
+                
+            case AUTO_LIGHTING_SUBMENU:
+                break;
+                
+            default:
+                break;
+        }
     }
 
     delay(10);
