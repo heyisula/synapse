@@ -125,13 +125,7 @@ void setup() {
         delay(2000);
     }
 
-    // Serial.println("Initializing UART (Debug output will stop due to shared pins)...");
-    // Serial.flush(); // Wait for message to send before pins are reconfigured
-    // uart.begin();
-    // Serial.println("Done."); // This won't be seen if pins are shared
-    Serial.println("Initializing UART... SKIPPED (Debugging Mode)");
-
-    // 5. Initialize Sensors
+    // 4. Initialize Sensors
     Serial.print("Initializing HeartRate (MAX30102)...");
     heartRate.begin();
     Serial.println("Done.");
@@ -166,6 +160,13 @@ void setup() {
 
     Serial.print("Initializing Battery Monitor...");
     battery.begin();
+    Serial.println("Done.");
+
+    // 5. Initialize UART (Motor Control)
+    Serial.println("Initializing UART (Motor Control)...");
+    uart.begin();
+    // Send a "Kick-start" command to initialize the connection
+    uart.sendMotorCommand(CMD_STOP, 0); 
     Serial.println("Done.");
 
     // 6. Instantiate Modes
@@ -205,11 +206,11 @@ void loop() {
     buzzer.update();
     
     // UART Acknowledgment Check - SKIPPED FOR DEBUG
-    // MotorCommand ackCmd;
-    // uint8_t ackSpeed;
-    // if (uart.receiveAcknowledgment(ackCmd, ackSpeed)) {
-    //     Serial.println("ACK: Command received by Motor Controller");
-    // }
+    MotorCommand ackCmd;
+    uint8_t ackSpeed;
+    if (uart.receiveAcknowledgment(ackCmd, ackSpeed)) {
+        Serial.println("ACK: Command received by Motor Controller");
+    }
 
     // Check for Firebase commands every loop for low latency
     static unsigned long lastFirebaseRx = 0;
@@ -267,16 +268,40 @@ void loop() {
 
     // Mode Execution Logic based on Menu Selection
     MenuState currentState = menu->getCurrentState();
-    // COMMUNICATION FAILSAFE: SKIPPED FOR DEBUG
-    // if (currentState != MAIN_MENU && currentState != SYSTEM_INFO && !uart.isConnected()) {
-    //     static unsigned long lastCommWarning = 0;
-    //     if (millis() - lastCommWarning > 5000) {
-    //         Serial.println("⚠ WARNING: Communication with Motor Board LOST!");
-    //         display.displayError("COMM LINK LOST");
-    //         lastCommWarning = millis();
-    //     }
-    //     return; // Don't execute movement modes if disconnected
-    // }
+    
+    // Communication Safety Check
+    // Only enforce this IF we have successfully connected at least once
+    static bool hasConnectedOnce = false;
+    if (uart.isConnected()) {
+        hasConnectedOnce = true;
+    }
+
+    if (hasConnectedOnce && currentState != MAIN_MENU && currentState != SYSTEM_INFO && !uart.isConnected()) {
+        static unsigned long lastCommWarning = 0;
+        if (millis() - lastCommWarning > 5000) {
+            Serial.println("⚠ WARNING: Communication with Motor Board LOST!");
+            display.displayError("COMM LINK LOST");
+            lastCommWarning = millis();
+        }
+        // We still allow the loop to continue so it can RETRY sending commands
+    }
+
+    // Global Battery Failsafe
+    float currentVoltage = battery.readVoltage();
+    if (currentVoltage < BATTERY_CRITICAL_VOLTAGE) {
+        static unsigned long lastBatteryWarning = 0;
+        if (millis() - lastBatteryWarning > 5000) {
+            Serial.print("!!! CRITICAL BATTERY: "); Serial.print(currentVoltage); Serial.println("V !!!");
+            display.displayError("BATTERY CRITICAL");
+            uart.sendEmergencyStop();
+            buzzer.playTone(TONE_ERROR);
+            lastBatteryWarning = millis();
+        }
+        // Force stop if critical
+        if (currentState != MAIN_MENU && currentState != SYSTEM_INFO) {
+            return; 
+        }
+    }
 
     static MenuState lastState = MAIN_MENU;
     static bool modeInitialized = false;
@@ -324,8 +349,7 @@ void loop() {
                     colorSensor.update(); 
                     break;
                 case MONITORING_MENU:
-                    // Calibrate sensors if needed before starting
-                    // monitoring->calibrateSensors(); // Optional: Uncomment if auto-calibration desired
+                    monitoring->calibrateSensors();
                     monitoring->startMonitoring();
                     // Force initial read
                     heartRate.update();

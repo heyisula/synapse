@@ -23,6 +23,14 @@ void UARTProtocol::sendMotorCommand(MotorCommand cmd, uint8_t speed) {
 
     uint8_t cmdValue = (uint8_t)cmd;
     uint8_t speedValue = constrain(speed, 0, 100);
+    
+    // DEBUG: Visualize outgoing command
+    Serial.print("-> MOTOR_TX: Cmd ");
+    Serial.print(cmdValue);
+    Serial.print(" | Spd ");
+    Serial.println(speedValue);
+
+    // Put command and speed into distinct slots
 
     // Put command and speed into distinct slots
     transfer.txObj(cmdValue, 0);      
