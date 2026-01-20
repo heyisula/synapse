@@ -768,4 +768,4 @@ git push origin feature/amazing-feature
 
 ### Long-Term Vision
 - [ ] Multi-robot coordination for hospital-wide coverage
-- [ ] AI-powere
+- [ ] AI-powered staff identification
