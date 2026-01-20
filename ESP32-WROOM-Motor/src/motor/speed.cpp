@@ -18,6 +18,7 @@ uint8_t SpeedController::normalizeSpeed(uint8_t speed) {
 }
 
 uint8_t SpeedController::applySpeedLimit(uint8_t requestedSpeed) {
+    // Apply min/max limits
     uint8_t normalized = normalizeSpeed(requestedSpeed);
     
     if (normalized < minSpeed) {

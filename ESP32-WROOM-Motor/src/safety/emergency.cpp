@@ -3,14 +3,13 @@
 
 EmergencyStop* EmergencyStop::instance = nullptr;
 
-EmergencyStop::EmergencyStop(uint8_t pin, MovementController* movement) : debounceDelay(300) { 
+EmergencyStop::EmergencyStop(uint8_t pin, MovementController* movement) {
     buttonPin = pin;
     movementController = movement;
     emergencyActive = false;
     lastButtonState = HIGH;
     lastDebounceTime = 0;
     interruptTriggered = false;
-    lastSource = NONE;
     instance = this;
 }
 
@@ -34,23 +33,21 @@ void EmergencyStop::update() {
     // Check if interrupt was triggered
     if (interruptTriggered) {
         interruptTriggered = false;
-        
-        // Debounce check
-        if ((millis() - lastDebounceTime) > debounceDelay) {
-            lastDebounceTime = millis();
-            toggle(BUTTON);
-        }
+        activate();
     }
+    
+    // Also poll the button state for redundancy
+    checkButton();
 }
 
 bool EmergencyStop::checkButton() {
     bool currentState = digitalRead(buttonPin);
     
-    // Button pressed (active LOW) - detect HIGH to LOW edge
+    // Button pressed (active LOW)
     if (currentState == LOW && lastButtonState == HIGH) {
         if ((millis() - lastDebounceTime) > debounceDelay) {
             lastDebounceTime = millis();
-            toggle(BUTTON);
+            activate();
             lastButtonState = currentState;
             return true;
         }
@@ -60,54 +57,19 @@ bool EmergencyStop::checkButton() {
     return false;
 }
 
-void EmergencyStop::activate(EmergencySource source) {
+void EmergencyStop::activate() {
     if (!emergencyActive) {
         emergencyActive = true;
-        lastSource = source;
         movementController->emergencyStop();
-        
-        DEBUG_PRINT("⚠️ EMERGENCY STOP ACTIVATED! (Source: ");
-        if (source == BUTTON) {
-            DEBUG_PRINT("BUTTON");
-        } else if (source == UART) {
-            DEBUG_PRINT("UART");
-        } else {
-            DEBUG_PRINT("UNKNOWN");
-        }
-        DEBUG_PRINTLN(")");
-    }
-}
-
-void EmergencyStop::toggle(EmergencySource source) {
-    if (emergencyActive) {
-        // Deactivate emergency
-        emergencyActive = false;
-        lastSource = NONE;
-        DEBUG_PRINTLN("✓ Emergency Stop DEACTIVATED");
-    } else {
-        // Activate emergency
-        activate(source);
+        DEBUG_PRINTLN("⚠️ EMERGENCY STOP ACTIVATED!");
     }
 }
 
 void EmergencyStop::reset() {
     emergencyActive = false;
-    lastSource = NONE;
     DEBUG_PRINTLN("Emergency Stop Reset");
 }
 
 bool EmergencyStop::isEmergencyActive() {
     return emergencyActive;
-}
-
-EmergencySource EmergencyStop::getLastSource() {
-    return lastSource;
-}
-
-bool EmergencyStop::isTriggeredByButton() {
-    return emergencyActive && lastSource == BUTTON;
-}
-
-bool EmergencyStop::isTriggeredByUART() {
-    return emergencyActive && lastSource == UART;
 }

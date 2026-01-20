@@ -1,7 +1,7 @@
 #include "uart.h"
-#include "config/pins.h"
-#include "config/constants.h"
-#include "config/debug.h"
+#include "../config/pins.h"
+#include "../config/constants.h"
+#include "../config/debug.h"
 
 
 UARTProtocol::UARTProtocol() {
