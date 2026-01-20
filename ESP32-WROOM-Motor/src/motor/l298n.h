@@ -37,7 +37,7 @@ private:
 
 public:
     L298NController();
-    ~L298NController(); // Destructor
+    ~L298NController();
     void begin();
     void allForward(uint8_t speed);
     void allBackward(uint8_t speed);
