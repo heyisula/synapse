@@ -36,14 +36,6 @@ bool FirebaseManager::sendData(const FirebaseTxData& d) {
     json.set("acceleration", d.acceleration);
     json.set("angular", d.angular);
     json.set("battery", d.battery);
-    
-    // DEBUG: Print voltage value before sending to Firebase
-    Serial.print("📤 Firebase TX - Voltage: ");
-    Serial.print(d.voltage, 4); // Print with 4 decimal places
-    Serial.print(" (type: float, raw bytes: ");
-    Serial.print(*(uint32_t*)&d.voltage, HEX);
-    Serial.println(")");
-    
     json.set("voltage", d.voltage);
 
     // Environment - SEND ONLY
