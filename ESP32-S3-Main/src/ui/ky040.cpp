@@ -15,7 +15,8 @@ void IRAM_ATTR encoderISR() {
 // This table is designed to handle full quadrature transitions.
 // Index = (old_state << 2) | new_state
 // We only care about pin states (2 bits).
-const int8_t KNOWN_STATES[] = {0, -1, 1, 0, 1, 0, 0, -1, -1, 0, 0, 1, 0, 1, -1, 0};
+// REVERSED DIRECTION: Swapped 1 and -1 from the original table.
+const int8_t KNOWN_STATES[] = {0, 1, -1, 0, -1, 0, 0, 1, 1, 0, 0, -1, 0, -1, 1, 0};
 
 RotaryEncoder::RotaryEncoder() {
     pinCLK = ROTARY_CLK;
@@ -119,47 +120,20 @@ int RotaryEncoder::getDelta() {
     encoderDelta = 0;
     interrupts();
     
-    // Optional: Divisor if it's too sensitive (2 ticks per step)
-    // The user said "not changing for EACH tick", implying it was too slow/insensitive.
-    // So we return raw delta. However, KY-040 often does 2 transitions per click.
-    // If d is 2, and we want 1 step.
-    
-    // Logic: If user complains of "no responsiveness", raw is safer. 
-    // They can filter in menu if it's too fast.
-    // But usually, 1 physical click = 2 or 4 ISR steps.
-    // Let's return d / 2 for standard KY-040 feel, BUT
-    // the user insists on responsiveness.
-    // Let's try 1:1 first. If it double-jumps, that's better than no-jumping.
-    // Actually, let's implement the classic "divide by 2" signal because 
-    // real detents usually span a full quadrature cycle (4) or half (2).
-    
-    // REVISION: User said "not responding to EACH tick".
-    // This implies they turn it, click, and nothing happens.
-    // This means we were MISSING counts.
-    // So we should return the raw accumulation, or maybe / 2 if we are sure.
-    // Let's return d / 2 but only if d >= 2.
-    
     if (d != 0) {
-        // Standard KY-040 has 2 signal changes per detent.
-        // So raw 'd' will be 2 or -2 per click.
-        // If we return 2, the menu jumps 2 items.
-        // We probably want to return d / 2.
+        // Standard KY-040 often creates 4 quadrature states per physical detent.
+        // We use a static accumulator to handle fractional movements or missed checks.
         
-        // Simple software divisor
-        // return d / 2; 
-        
-        // But what if we only got 1? (half turn).
-        // If we integer divide 1/2 = 0, we lose it.
-        // Let's use a static accumulator for the fractional part?
-        // No, let's just return d and let the menu handle it? 
-        // No, menu expects +1/-1 usually.
-        
-        // Let's go with: Only trigger on even counts.
         static int remainder = 0;
         int total = d + remainder;
         
-        int steps = total / 2; 
-        remainder = total % 2;
+        // Changed divisor from 2 to 4 to fix "double stepping" (skipping items)
+        // If the encoder is 2-step per detent, change this to 2.
+        // If the encoder is 4-step per detent (common), use 4.
+        const int STEPS_PER_DETENT = 4;
+        
+        int steps = total / STEPS_PER_DETENT; 
+        remainder = total % STEPS_PER_DETENT;
         
         return steps;
     }
