@@ -579,40 +579,41 @@ SYNAPSE includes a comprehensive web-based control and monitoring interface host
 
 | GPIO | Function | Description |
 |------|----------|-------------|
+| GPIO 1 | IR S5 | Line sensor (far right) |
 | GPIO 2 | I2C SDA | LCD, MPU-6050, MAX30102 |
 | GPIO 3 | I2C SCL | LCD, MPU-6050, MAX30102 |
-| GPIO 4 | US Front Trigger | Ultrasonic sensor (front) |
-| GPIO 5 | US Front Echo | Ultrasonic sensor (front) |
-| GPIO 6 | US Back Trigger | Ultrasonic sensor (back) |
-| GPIO 7 | US Back Echo | Ultrasonic sensor (back) |
-| GPIO 8 | US Left Trigger | Ultrasonic sensor (left) |
-| GPIO 9 | US Left Echo | Ultrasonic sensor (left) |
-| GPIO 10 | US Right Trigger | Ultrasonic sensor (right) |
-| GPIO 11 | US Right Echo | Ultrasonic sensor (right) |
-| GPIO 12 | Buzzer 1 | Piezo buzzer output |
-| GPIO 13 | Buzzer 2 | Piezo buzzer output |
-| GPIO 15 | LDR 1 | Path visibility (left) |
-| GPIO 16 | LDR 2 | Path visibility (right) |
-| GPIO 17 | LDR 3 | Compartment security |
-| GPIO 18 | LDR 4 | Compartment security |
+| GPIO 4 | IR S1 | Line sensor (far left) |
+| GPIO 5 | IR S2 | Line sensor (left) |
+| GPIO 6 | IR S3 | Line sensor (center) |
+| GPIO 7 | IR S4 | Line sensor (right) |
+| GPIO 8 | US Front Trigger | Ultrasonic sensor (front) |
+| GPIO 9 | US Front Echo | Ultrasonic sensor (front) |
+| GPIO 10 | LDR 4 | Compartment security (ADC) |
+| GPIO 11 | Battery Monitor | Battery voltage ADC |
+| GPIO 12 | US Left Trigger | Ultrasonic sensor (left) |
+| GPIO 13 | US Left Echo | Ultrasonic sensor (left) |
+| GPIO 14 | US Right Echo | Ultrasonic sensor (right) |
+| GPIO 15 | Buzzer 1 | Piezo buzzer output |
+| GPIO 16 | Buzzer 2 | Piezo buzzer output |
+| GPIO 17 | Color OUT | TCS3200 frequency output |
+| GPIO 18 | Color S0 | TCS3200 frequency scaling |
 | GPIO 19 | AM2302 Data | Temperature/humidity sensor |
-| GPIO 0 | Color OUT | TCS3200 frequency output |
-| GPIO 20 | Color S2 | TCS3200 filter selection |
-| GPIO 45 | Color S3 | TCS3200 filter selection |
-| GPIO 47 | Color S0 | TCS3200 frequency scaling |
-| GPIO 48 | Color S1 | TCS3200 frequency scaling |
-| GPIO 1 | IR S4 | Line sensor (right) |
-| GPIO 21 | IR S5 | Line sensor (far right) |
-| GPIO 35 | IR S1 | Line sensor (far left) |
-| GPIO 36 | IR S2 | Line sensor (left) |
-| GPIO 37 | IR S3 | Line sensor (center) |
-| GPIO 38 | Encoder CLK | KY-040 rotary encoder |
-| GPIO 39 | Encoder DT | KY-040 rotary encoder |
+| GPIO 20 | Color S3 | TCS3200 filter selection |
+| GPIO 21 | US Right Trigger | Ultrasonic sensor (right) |
+| GPIO 35 | LDR 1 | Path visibility left (ADC) |
+| GPIO 36 | LDR 2 | Path visibility right (ADC) |
+| GPIO 37 | LDR 3 | Compartment security (ADC) |
+| GPIO 38 | Encoder CLK | KY-040 rotary encoder clock |
+| GPIO 39 | Encoder DT | KY-040 rotary encoder data |
 | GPIO 40 | Encoder SW | KY-040 push button |
 | GPIO 41 | LED Left | LED array control |
 | GPIO 42 | LED Right | LED array control |
 | GPIO 43 | UART TX | Communication to WROOM32 |
 | GPIO 44 | UART RX | Communication from WROOM32 |
+| GPIO 45 | Color S1 | TCS3200 frequency scaling |
+| GPIO 46 | Color S2 | TCS3200 filter selection |
+| GPIO 47 | US Back Echo | Ultrasonic sensor (back) |
+| GPIO 48 | US Back Trigger | Ultrasonic sensor (back) |
 
 #### ESP32 WROOM-32 Motor Controller
 
