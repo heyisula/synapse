@@ -68,20 +68,29 @@ void ObstacleAvoidance::update() {
         currentStatus = STATUS_CLEAR;
     }
 
-    //3: Autonomous Pathfinding
+    //3: Autonomous Pathfinding / Side-stepping
     if (frontDistance < COLLISION_DISTANCE_FRONT) {
-        // Path is partially blocked ahead
+        // Path is blocked ahead - try to side-step (strafe) first
         currentStatus = STATUS_SLOW;
         currentSpeed = MOTOR_SPEED_MIN;
 
-        // Decide which way to turn
-        if (leftDistance > rightDistance && leftDistance > COLLISION_DISTANCE_SIDE) {
-            // Left is clearer - Rotate Left
+        if (leftDistance > 70) {
+            // Left space is ample - Strafe Left to dodge
+            uart->sendMotorCommand(CMD_STRAFE_LEFT, MOTOR_SPEED_MIN);
+            Log.println("⇇ Side-stepping Left to dodge obstacle");
+        } 
+        else if (rightDistance > 70) {
+            // Right space is ample - Strafe Right to dodge
+            uart->sendMotorCommand(CMD_STRAFE_RIGHT, MOTOR_SPEED_MIN);
+            Log.println("⇉ Side-stepping Right to dodge obstacle");
+        }
+        else if (leftDistance > rightDistance && leftDistance > COLLISION_DISTANCE_SIDE) {
+            // Limited side space - Rotate Left
             uart->sendMotorCommand(CMD_ROTATE_LEFT, MOTOR_SPEED_MIN);
             Log.println("⟲ Path blocked - Rotating Left");
         } 
         else if (rightDistance > leftDistance && rightDistance > COLLISION_DISTANCE_SIDE) {
-            // Right is clearer - Rotate Right
+            // Limited side space - Rotate Right
             uart->sendMotorCommand(CMD_ROTATE_RIGHT, MOTOR_SPEED_MIN);
             Log.println("⟳ Path blocked - Rotating Right");
         }

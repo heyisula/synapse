@@ -374,15 +374,28 @@ void AssistantMode::sendFollowingCommand() {
         }
     }
 
-    // 1: Rotation Adjustment (Independent of forward hysteresis)
-    if (abs(lateralError) > 18) {
-        uint8_t rotSpeed = 45; // Fixed moderate speed for rotation
-        if (lateralError > 0) {
-            uart->sendMotorCommand(CMD_RIGHT, rotSpeed);
-            Log.println("→ Adjusting course right");
+    // 1: Lateral Adjustment (Strafing vs Rotation)
+    if (abs(lateralError) > 12) {
+        uint8_t speed = 45; 
+        
+        if (abs(lateralError) < 25) {
+            // Small error: Strafe to stay centered without rotating
+            if (lateralError > 0) {
+                uart->sendMotorCommand(CMD_STRAFE_RIGHT, speed);
+                Log.println("⇉ Strafing Right to center");
+            } else {
+                uart->sendMotorCommand(CMD_STRAFE_LEFT, speed);
+                Log.println("⇇ Strafing Left to center");
+            }
         } else {
-            uart->sendMotorCommand(CMD_LEFT, rotSpeed);
-            Log.println("← Adjusting course left");
+            // Large error: Rotate to re-acquire target
+            if (lateralError > 0) {
+                uart->sendMotorCommand(CMD_ROTATE_RIGHT, speed);
+                Log.println("⟳ Rotating Right to face person");
+            } else {
+                uart->sendMotorCommand(CMD_ROTATE_LEFT, speed);
+                Log.println("⟲ Rotating Left to face person");
+            }
         }
     } 
     // 2: Distance Following (Only execute if motion is active)
@@ -411,7 +424,7 @@ void AssistantMode::sendFollowingCommand() {
 
 void AssistantMode::stopRobot() {
     uart->sendMotorCommand(CMD_STOP, 0);
-    Serial.println("■ Robot stopped");
+    Log.println("■ Robot stopped");
 }
 
 StaffType AssistantMode::colorToStaffType(ColorType color) {

@@ -12,6 +12,8 @@ enum MotorCommand {
     CMD_RIGHT,
     CMD_ROTATE_LEFT,
     CMD_ROTATE_RIGHT,
+    CMD_STRAFE_LEFT,
+    CMD_STRAFE_RIGHT,
     CMD_EMERGENCY_STOP
 };
 
