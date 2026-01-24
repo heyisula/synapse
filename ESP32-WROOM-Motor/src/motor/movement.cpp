@@ -58,6 +58,16 @@ void MovementController::executeCommand(MotorCommand cmd, uint8_t speed) {
             isMoving = true;
             break;
             
+        case CMD_STRAFE_LEFT:
+            strafeLeft(currentSpeed);
+            isMoving = true;
+            break;
+            
+        case CMD_STRAFE_RIGHT:
+            strafeRight(currentSpeed);
+            isMoving = true;
+            break;
+            
         case CMD_STOP:
             stop();
             break;
@@ -132,6 +142,16 @@ void MovementController::rotateRight(uint8_t speed) {
     // Rotate in place - left motors forward, right motors backward
     motorController->leftSideForward(speed);
     motorController->rightSideBackward(speed);
+}
+
+void MovementController::strafeLeft(uint8_t speed) {
+    if (motorController == nullptr) return;
+    motorController->strafeLeft(speed);
+}
+
+void MovementController::strafeRight(uint8_t speed) {
+    if (motorController == nullptr) return;
+    motorController->strafeRight(speed);
 }
 
 MotorCommand MovementController::getCurrentCommand() {

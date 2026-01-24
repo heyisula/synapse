@@ -72,6 +72,8 @@ void loop() {
             case CMD_RIGHT: DEBUG_PRINT("RIGHT"); break;
             case CMD_ROTATE_LEFT: DEBUG_PRINT("ROTATE_LEFT"); break;
             case CMD_ROTATE_RIGHT: DEBUG_PRINT("ROTATE_RIGHT"); break;
+            case CMD_STRAFE_LEFT: DEBUG_PRINT("STRAFE_LEFT"); break;
+            case CMD_STRAFE_RIGHT: DEBUG_PRINT("STRAFE_RIGHT"); break;
             case CMD_STOP: DEBUG_PRINT("STOP"); break;
             default: DEBUG_PRINT("UNKNOWN"); break;
         }

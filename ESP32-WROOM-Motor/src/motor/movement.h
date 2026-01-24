@@ -31,6 +31,8 @@ private:
     void turnRight(uint8_t speed);
     void rotateLeft(uint8_t speed);
     void rotateRight(uint8_t speed);
+    void strafeLeft(uint8_t speed);
+    void strafeRight(uint8_t speed);
 };
 
 #endif

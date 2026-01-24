@@ -180,6 +180,22 @@ void L298NController::rightSideBackward(uint8_t speed) {
     rightBackMotor->backward(speed);
 }
 
+void L298NController::strafeLeft(uint8_t speed) {
+    // Strafe Left: FL Backward, FR Forward, BL Forward, BR Backward
+    leftFrontMotor->backward(speed);
+    rightFrontMotor->forward(speed);
+    leftBackMotor->forward(speed);
+    rightBackMotor->backward(speed);
+}
+
+void L298NController::strafeRight(uint8_t speed) {
+    // Strafe Right: FL Forward, FR Backward, BL Backward, BR Forward
+    leftFrontMotor->forward(speed);
+    rightFrontMotor->backward(speed);
+    leftBackMotor->backward(speed);
+    rightBackMotor->forward(speed);
+}
+
 void L298NController::leftSideStop() {
     leftFrontMotor->stop();
     leftBackMotor->stop();

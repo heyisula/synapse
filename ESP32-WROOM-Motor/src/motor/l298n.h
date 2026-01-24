@@ -50,6 +50,10 @@ public:
     void rightSideForward(uint8_t speed);
     void rightSideBackward(uint8_t speed);
     
+    // Mecanum strafing
+    void strafeLeft(uint8_t speed);
+    void strafeRight(uint8_t speed);
+    
     void leftSideStop();
     void rightSideStop();
     
