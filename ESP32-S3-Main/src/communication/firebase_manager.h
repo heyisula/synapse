@@ -6,7 +6,7 @@
 
 struct FirebaseTxData {
     // Sensor readings - SEND ONLY
-    float acceleration;           // Send acceleration
+    float acceleration;        // Send acceleration
     int angular;               // Send angular velocity
     int battery;               // Send battery level
     float voltage;             // Send voltage
@@ -24,16 +24,12 @@ struct FirebaseTxData {
 };
 
 struct FirebaseRxData {
-    // Buzzer control - RECEIVE ONLY
+    // Sensor and Actuator control - RECEIVE ONLY
     bool buzzer01ring;         // Receive signal to ring buzzer 1
     bool buzzer02ring;         // Receive signal to ring buzzer 2
     int buzzersound;           // Receive buzzer volume control
-    
-    // LED brightness control - RECEIVE ONLY
     int lightadj_left;         // Receive left LED brightness adjustment
     int lightadj_right;        // Receive right LED brightness adjustment
-    
-    // Sensor start/stop flags - RECEIVE ONLY
     bool colour_start;         // Receive signal to start color detection
     bool compartment_start;    // Receive signal to start compartment LDR check
     bool heartrate_start;      // Receive signal to start heart rate sensor

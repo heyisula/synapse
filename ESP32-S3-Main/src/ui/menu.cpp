@@ -74,11 +74,6 @@ void MenuSystem::select() {
                     break;
         }
         
-        // Start Splash Screen if we moved OUT of Main Menu (and not into a submenu like AutoLighting which is handled differently? 
-        // Logic: specific modes (Assistant, Monitoring, Obs, Line) need splash.
-        // AutoLighting Submenu (5) is a submenu, not a "Running" mode yet.
-        // System Info (4) is a static screen.
-        
         if (currentMenu == ASSISTANT_MODE || currentMenu == MONITORING_MENU || 
             currentMenu == OBSTACLE_AVOIDANCE_MODE || currentMenu == LINE_FOLLOWING) {
             splashStartTime = millis();

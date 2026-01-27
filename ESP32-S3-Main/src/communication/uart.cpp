@@ -30,9 +30,7 @@ void UARTProtocol::sendMotorCommand(MotorCommand cmd, uint8_t speed) {
     Log.print(cmdValue);
     Log.print(" | Spd ");
     Log.println(speedValue);
-
-    // Put command and speed into distinct slots
-
+    
     // Put command and speed into distinct slots
     transfer.txObj(cmdValue, 0);      
     transfer.txObj(speedValue, 1);    

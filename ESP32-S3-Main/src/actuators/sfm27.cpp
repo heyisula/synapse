@@ -28,7 +28,7 @@ void Buzzer::begin() {
     
     stop();
 
-    // Create FreeRTOS task for non-blocking execution
+    // FreeRTOS task for non-blocking execution
     if (taskHandle == NULL) {
         xTaskCreatePinnedToCore(
             taskWorker,   // Function
